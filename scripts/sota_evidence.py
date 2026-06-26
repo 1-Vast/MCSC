@@ -167,10 +167,10 @@ def fmt_delta(delta: Optional[dict]) -> str:
 
 def write_report(result: dict) -> None:
     lines = [
-        "# SOTA Evidence Report",
+        "# Same-Protocol Frontier Evidence Report",
         "",
-        "Scope: reproduced-frontier SOTA-level evidence under this repository's exact cold-split protocol.",
-        "This report does not use paper-table comparisons and does not claim superiority over unreproduced official baselines.",
+        "Scope: same-protocol reproduced-frontier evidence under this repository's exact cold-split protocol.",
+        "This report does not use paper-table comparisons and does not support claims beyond reproduced/adapted local baselines.",
         "",
         "## Frontier Table",
         "",
@@ -204,9 +204,9 @@ def write_report(result: dict) -> None:
         "",
         "## Claim Boundary",
         "",
-        "- Supported: MCSC frozen split-level residual alpha is SOTA-level against the reproduced local frontier: DeepDTA, compact GraphDTA, compact MolTrans, and XGBoost mean references on all four cold splits.",
-        "- Supported mechanism claim: dataset-adaptive target representation plus validation-frozen residual shrinkage solves the observed refiner self-harm bottleneck under these splits.",
-        "- Not supported: global SOTA against paper-faithful official GraphDTA/MolTrans/DrugBAN or arbitrary external paper tables.",
+        "- Supported: MCSC frozen split-level residual alpha outperforms the reproduced local frontier: DeepDTA, compact GraphDTA, compact MolTrans, and XGBoost mean references on all four cold splits.",
+        "- Supported mechanism claim: dataset-adaptive target representation plus validation-frozen residual shrinkage reduces the observed refiner self-harm under these splits.",
+        "- Not supported: global SOTA claims, paper-table comparisons, or superiority over paper-faithful official GraphDTA/MolTrans/DrugBAN reproductions.",
     ])
     REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

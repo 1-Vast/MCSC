@@ -27,25 +27,21 @@ before final evaluation.
 - train prior uses leave-one-out memory and leave-one-out drug marginal.
 - blend weight is selected on validation only.
 - frozen alpha shrinks the learned residual to prevent prior self-harm.
-- `ResidualRefiner` is a PyTorch neural network trained on CUDA/AMP when
-  available; MCSC-FrozenAlpha is therefore a deep learning model with a frozen
+- `ResidualRefiner` is a PyTorch neural network trained on CUDA/AMP;
+  MCSC-FrozenAlpha is therefore a deep learning model with a frozen
   memory-calibrated prior.
 - KIBA cluster-cold uses sklearn `KMeans(n_init=10)` as the canonical split.
 
 ## GPU And Runtime Boundary
 
-The active tensor path is GPU-first: descriptor tensors, interaction-memory
-retrieval, residual training, and batched inference run on CUDA when requested.
-The implementation avoids per-label CPU/GPU writes in `InteractionMemory` and
+The active tensor path is CUDA-only: descriptor tensors, interaction-memory
+retrieval, residual training, and batched inference run on GPU. The
+implementation avoids per-label CPU/GPU writes in `InteractionMemory` and
 preloads refiner inference indices on-device.
 
 Canonical split construction, sklearn KMeans, dataset parsing, and cache loading
-remain CPU-side. Short DAVIS/KIBA cells can show bursty `nvidia-smi` utilization;
-the correctness gate is CUDA/AMP metadata plus reproduced metrics, not artificial
-GPU burn.
-
-Use `--gpu-monitor outputs/mcsc/gpu-monitor.json` to sample real utilization
-during a run. The monitor is an audit aid only and is not committed as evidence.
+remain CPU-side by library/file-I/O design. CPU/GPU switching and runtime
+monitoring are not exposed as model features.
 
 ## Current Evidence
 

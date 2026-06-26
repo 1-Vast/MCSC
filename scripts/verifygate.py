@@ -67,12 +67,12 @@ def check_mcsc_source_contract() -> None:
         "KMeans(n_clusters=8, random_state=seed + 5, n_init=10)",
         "torch.amp.autocast",
         "torch.amp.GradScaler",
-        'parser.add_argument("--device"',
         'parser.add_argument("--batch-size"',
-        'parser.add_argument("--eval-batch-size"',
+        'device = resolve_device("cuda")',
+        "amp = True",
+        "eval_batch_size = 65536",
         "torch.backends.cudnn.benchmark = True",
         "drug_all = torch.as_tensor",
-        "--gpu-monitor",
         'torch.set_float32_matmul_precision("high")',
         "opt.zero_grad(set_to_none=True)",
     ]
@@ -81,6 +81,18 @@ def check_mcsc_source_contract() -> None:
         fail(f"scripts/mcsc.py missing required mainline tokens: {missing}")
     if ".detach().cpu().clone()" in src:
         fail("MCSC training loop still syncs best checkpoint snapshots to CPU")
+    forbidden_cli = [
+        'parser.add_argument("--device"',
+        'parser.add_argument("--eval-batch-size"',
+        'parser.add_argument("--amp"',
+        'parser.add_argument("--no-amp"',
+        "gpu-monitor",
+        "GpuMonitor",
+        "nvidia-smi",
+    ]
+    found_cli = [token for token in forbidden_cli if token in src]
+    if found_cli:
+        fail(f"MCSC exposes non-mainline runtime/monitor parameters: {found_cli}")
     forbidden = ["verify_kiba_loo", "selector_search", "residual_shrinkage", "scripts.rcsc", "deepseek"]
     found = [token for token in forbidden if token.lower() in src.lower()]
     if found:
@@ -156,7 +168,7 @@ def check_checkpoint_metadata() -> None:
         if (dataset, split, seed) not in seen
     ]
     if missing:
-        fail(f"missing MCSC checkpoint metadata for {len(missing)} cells/seeds; run `python main.py mcsc --stage full --device cuda`")
+        fail(f"missing MCSC checkpoint metadata for {len(missing)} cells/seeds; run `python main.py mcsc --stage full`")
     for (dataset, split, seed), row in seen.items():
         if (dataset, split) not in CELLS:
             continue

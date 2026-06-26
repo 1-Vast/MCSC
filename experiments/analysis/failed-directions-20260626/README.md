@@ -65,15 +65,9 @@ removed because they duplicated conclusions and made failed branches look active
   protocol.
 - LLM/DeepSeek text is not part of the active mainline unless cached, audited,
   and free of benchmark/affinity leakage.
-- GPU use is expected for the current MCSC run path; CPU is only an explicit
-  fallback/debug mode.
-- GPU utilization on DAVIS/KIBA is expected to be bursty because the cells are
-  small and canonical split/KMeans work is CPU-side. Optimize real tensor
-  transfer and batching; do not add fake GPU work just to raise `nvidia-smi`.
-- A one-seed GPU monitor smoke can show low mean utilization even when the
-  checkpoint records CUDA/AMP, because the train/eval burst is shorter than
-  sustained GPU sampling. Treat long-held 95-100% utilization as a workload-size
-  property, not a valid promotion criterion for this small mainline.
+- GPU use is required for the current MCSC train/infer tensor path. Runtime
+  monitoring and artificial utilization boosting are not model contributions and
+  should stay outside the mainline interface.
 - Optional target-text preprocessing must call the local leakage scanner before
   feature construction. A stale `leakage.audit` self-reference was fixed in the
   second cleanup round.

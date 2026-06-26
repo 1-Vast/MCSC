@@ -43,8 +43,8 @@ HELP = """DrugTarget commands:
 Optional:
   python main.py api --limit 30
 
-The trainable mainline is MCSC-FrozenAlpha. Defaults use GPU automatically
-when CUDA is available. Use `python main.py <command> --help` for options.
+The trainable mainline is MCSC-FrozenAlpha. MCSC train/infer is CUDA-only.
+Use `python main.py <command> --help` for options.
 """
 
 

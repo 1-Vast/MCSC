@@ -16,9 +16,7 @@ from contextlib import nullcontext
 import json
 import os
 import pickle
-import subprocess
 import sys
-import threading
 import time
 from collections import defaultdict
 from dataclasses import dataclass
@@ -56,9 +54,6 @@ CELLS = (
 )
 SEEDS = tuple(range(1, 9))
 ALPHAS = (0.0, 0.25, 0.5, 0.75, 1.0)
-DEFAULT_DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-
-
 @dataclass
 class DatasetBundle:
     dataset: str
@@ -87,95 +82,6 @@ def repo_rel(path: Path) -> str:
     return path.relative_to(REPO).as_posix()
 
 
-class GpuMonitor:
-    """Optional lightweight nvidia-smi sampler for real GPU utilization audits."""
-
-    def __init__(self, path: Path | None, interval: float = 0.5) -> None:
-        self.path = path
-        self.interval = max(float(interval), 0.2)
-        self.samples: list[dict] = []
-        self._stop = threading.Event()
-        self._thread: threading.Thread | None = None
-
-    def __enter__(self):
-        if self.path is None:
-            return self
-        self._thread = threading.Thread(target=self._run, name="mcsc-gpu-monitor", daemon=True)
-        self._thread.start()
-        return self
-
-    def __exit__(self, exc_type, exc, tb) -> None:
-        if self.path is None:
-            return
-        self._stop.set()
-        if self._thread is not None:
-            self._thread.join(timeout=2.0)
-        self.write()
-
-    def _run(self) -> None:
-        while not self._stop.is_set():
-            sample = self._sample()
-            if sample:
-                self.samples.append(sample)
-            self._stop.wait(self.interval)
-
-    @staticmethod
-    def _sample() -> dict | None:
-        try:
-            proc = subprocess.run(
-                [
-                    "nvidia-smi",
-                    "--query-gpu=timestamp,utilization.gpu,memory.used,memory.total",
-                    "--format=csv,noheader,nounits",
-                ],
-                capture_output=True,
-                text=True,
-                timeout=2,
-                check=False,
-            )
-        except (OSError, subprocess.SubprocessError):
-            return None
-        if proc.returncode != 0 or not proc.stdout.strip():
-            return None
-        first = proc.stdout.strip().splitlines()[0]
-        parts = [part.strip() for part in first.split(",")]
-        if len(parts) < 4:
-            return None
-        return {
-            "timestamp": parts[0],
-            "utilizationGpuPct": float(parts[1]),
-            "memoryUsedMiB": float(parts[2]),
-            "memoryTotalMiB": float(parts[3]),
-        }
-
-    def write(self) -> None:
-        if self.path is None:
-            return
-        util = np.asarray([row["utilizationGpuPct"] for row in self.samples], dtype=float)
-        mem = np.asarray([row["memoryUsedMiB"] for row in self.samples], dtype=float)
-        summary = {
-            "schema": "drugtarget-gpu-monitor-v1",
-            "note": "Samples include CPU-side split/data phases; short DAVIS/KIBA cells can be bursty.",
-            "intervalSec": self.interval,
-            "nSamples": int(len(self.samples)),
-            "utilizationGpuPct": {
-                "mean": round(float(util.mean()), 2) if util.size else None,
-                "p50": round(float(np.percentile(util, 50)), 2) if util.size else None,
-                "p90": round(float(np.percentile(util, 90)), 2) if util.size else None,
-                "max": round(float(util.max()), 2) if util.size else None,
-                "shareAtLeast80Pct": round(float((util >= 80).mean()), 4) if util.size else None,
-                "shareAtLeast95Pct": round(float((util >= 95).mean()), 4) if util.size else None,
-            },
-            "memoryMiB": {
-                "meanUsed": round(float(mem.mean()), 2) if mem.size else None,
-                "maxUsed": round(float(mem.max()), 2) if mem.size else None,
-            },
-            "samples": self.samples,
-        }
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
-
-
 def checkpoint_path(dataset: str, split: str, seed: int) -> Path:
     name = f"{dataset.lower()}_{split.replace('-', '_')}_seed{seed}.pt"
     return CHECKPOINT_DIR / name
@@ -193,7 +99,7 @@ def load_bundle(dataset: str) -> DatasetBundle:
     if dataset in _BUNDLES:
         return _BUNDLES[dataset]
     if dataset == "DAVIS":
-        settings = RunSettings(device="cpu")
+        settings = RunSettings(device="cuda")
         settings.encoder.drug = "morgan"
         settings.encoder.target = "kb"
         data = load_data(settings)
@@ -337,10 +243,10 @@ def select_global_blend_weight(val_fine: np.ndarray, val_marginal: np.ndarray, v
 
 
 def resolve_device(name: str) -> torch.device:
-    if name == "auto":
-        name = DEFAULT_DEVICE
     if name == "cuda" and not torch.cuda.is_available():
         raise SystemExit("CUDA requested but torch.cuda.is_available() is false")
+    if name != "cuda":
+        raise SystemExit("MCSC mainline requires CUDA; CPU fallback is not exposed")
     return torch.device(name)
 
 
@@ -784,19 +690,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--splits", nargs="*", help="Subset like DAVIS/target-cold KIBA/cluster-cold")
     parser.add_argument("--seeds", nargs="*", type=int, default=list(SEEDS))
     parser.add_argument("--force", action="store_true", help="retrain selected cells even if cached")
-    parser.add_argument("--device", choices=["auto", "cuda", "cpu"], default="auto")
     parser.add_argument("--batch-size", type=int, default=4096)
-    parser.add_argument("--eval-batch-size", type=int, default=65536)
-    parser.add_argument("--amp", action="store_true", default=True)
-    parser.add_argument("--no-amp", dest="amp", action="store_false")
-    parser.add_argument(
-        "--gpu-monitor",
-        nargs="?",
-        const=str(OUT_DIR / "gpu-monitor.json"),
-        default="",
-        help="Optionally sample nvidia-smi utilization into a JSON file.",
-    )
-    parser.add_argument("--gpu-monitor-interval", type=float, default=0.5)
     return parser.parse_args()
 
 
@@ -841,23 +735,21 @@ def main() -> None:
     args = parse_args()
     cells = parse_cells(args.splits)
     seeds = [int(seed) for seed in args.seeds]
-    device = resolve_device(args.device)
+    device = resolve_device("cuda")
+    eval_batch_size = 65536
+    amp = True
     if device.type == "cuda":
         torch.backends.cudnn.benchmark = True
         torch.set_float32_matmul_precision("high")
-    monitor_path = Path(args.gpu_monitor) if args.gpu_monitor else None
-    if monitor_path is not None and not monitor_path.is_absolute():
-        monitor_path = REPO / monitor_path
-    with GpuMonitor(monitor_path, args.gpu_monitor_interval):
-        if args.stage == "train":
-            run_train(cells, seeds, args.force, device, args.batch_size, args.eval_batch_size, args.amp)
-        elif args.stage in {"infer", "report"}:
-            run_infer(cells, seeds, device, args.eval_batch_size, args.amp)
-        elif args.stage == "full":
-            run_train(cells, seeds, args.force, device, args.batch_size, args.eval_batch_size, args.amp)
-            run_infer(cells, seeds, device, args.eval_batch_size, args.amp)
-        elif args.stage == "cleanup":
-            cleanup()
+    if args.stage == "train":
+        run_train(cells, seeds, args.force, device, args.batch_size, eval_batch_size, amp)
+    elif args.stage in {"infer", "report"}:
+        run_infer(cells, seeds, device, eval_batch_size, amp)
+    elif args.stage == "full":
+        run_train(cells, seeds, args.force, device, args.batch_size, eval_batch_size, amp)
+        run_infer(cells, seeds, device, eval_batch_size, amp)
+    elif args.stage == "cleanup":
+        cleanup()
 
 
 if __name__ == "__main__":

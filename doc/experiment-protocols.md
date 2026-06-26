@@ -3,7 +3,7 @@
 ## Mainline Reproduction
 
 ```powershell
-python main.py mcsc --stage full --device cuda
+D:\anaconda\envs\drug\python.exe main.py mcsc --stage full
 python main.py sotaevidence
 python main.py check
 python main.py verifygate
@@ -32,7 +32,7 @@ numbers as evidence.
 
 ## Promotion Gate
 
-1. `python main.py mcsc --stage full --device cuda` completes all 32 cells.
+1. `python main.py mcsc --stage full` completes all 32 cells on the CUDA-only MCSC path.
 2. `doc/mcsc-mainline-results.json` reports `MCSC-FrozenAlpha` with 8 seeds.
 3. Deep baseline records are complete under the same splits and seeds.
 4. `python main.py sotaevidence` marks every required cell `PASS`.

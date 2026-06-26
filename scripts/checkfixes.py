@@ -148,13 +148,26 @@ def check_mcsc_mainline_source() -> None:
         "torch.amp.GradScaler",
         "torch.amp.autocast",
         "drug_all = torch.as_tensor",
-        "--gpu-monitor",
+        'device = resolve_device("cuda")',
+        "amp = True",
+        "eval_batch_size = 65536",
         'torch.set_float32_matmul_precision("high")',
         "opt.zero_grad(set_to_none=True)",
     ]
     missing = [token for token in required if token not in src]
     assert not missing, f"MCSC source missing required tokens: {missing}"
     assert ".detach().cpu().clone()" not in src, "training loop still syncs best-state snapshots to CPU"
+    forbidden_cli = [
+        'parser.add_argument("--device"',
+        'parser.add_argument("--eval-batch-size"',
+        'parser.add_argument("--amp"',
+        'parser.add_argument("--no-amp"',
+        "gpu-monitor",
+        "GpuMonitor",
+        "nvidia-smi",
+    ]
+    found_cli = [token for token in forbidden_cli if token in src]
+    assert not found_cli, f"MCSC exposes non-mainline runtime/monitor parameters: {found_cli}"
     assert "self.y_train[drug_t, target_t] = label_t" in memory_src, "InteractionMemory labels are not vectorized on-device"
     assert "report = audit(ids, texts)" in runtime_src, "runtime leakage audit must call local audit()"
     assert "write_record(report, out)" in runtime_src, "runtime leakage audit must call local write_record()"
@@ -189,7 +202,7 @@ def check_residual_alpha_calibration() -> None:
 def check_mcsc_outputs() -> None:
     results = REPO / "doc" / "mcsc-mainline-results.json"
     if not results.exists():
-        print("[skip] MCSC results missing; run `python main.py mcsc --stage full --device cuda`")
+        print("[skip] MCSC results missing; run `python main.py mcsc --stage full`")
         return
     data = json.loads(results.read_text(encoding="utf-8"))
     assert data.get("variant") == "MCSC-FrozenAlpha", "MCSC result variant mismatch"
@@ -204,7 +217,7 @@ def check_mcsc_outputs() -> None:
 def check_mcsc_manifest() -> None:
     manifest = REPO / "outputs" / "mcsc" / "manifest.json"
     if not manifest.exists():
-        print("[skip] MCSC checkpoint manifest missing; run `python main.py mcsc --stage train --device cuda`")
+        print("[skip] MCSC checkpoint manifest missing; run `python main.py mcsc --stage train`")
         return
     data = json.loads(manifest.read_text(encoding="utf-8"))
     keys = {

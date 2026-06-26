@@ -2,7 +2,7 @@
 
 ## Current MCSC Frontier
 
-Best defensible local frontier: **frozen split-level residual alpha**.
+Current local frontier under the repository protocol: **frozen split-level residual alpha**.
 RCSC status: **rejected / not promotable**.
 
 Mainline ingredients:
@@ -16,9 +16,9 @@ Allowed claims:
 
 - Frozen residual alpha improves the prior on all four cold splits under 8 seeds.
 - Frozen residual alpha reduces harmful correction on all four splits and improves the full refiner significantly on three of four splits; DAVIS family-cold is safer but not a significant R2 win over the full refiner.
-- Frozen alpha beats reproduced DeepDTA, compact GraphDTA, compact MolTrans, and local XGBoost mean references on all four required cold splits.
-- The current MCSC frontier is **reproduced-frontier SOTA-level** under the repository's identical local split/seed/metric protocol.
-- Mechanism evidence supports dataset-adaptive target representation plus validation-frozen residual shrinkage as the fix for the observed refiner self-harm bottleneck.
+- Frozen alpha outperforms reproduced DeepDTA, compact GraphDTA, compact MolTrans, and local XGBoost mean references on all four required cold splits.
+- The current MCSC frontier is supported at the reproduced-frontier level under the repository's identical local split/seed/metric protocol.
+- Mechanism evidence supports dataset-adaptive target representation plus validation-frozen residual shrinkage as a mitigation for the observed refiner self-harm bottleneck.
 
 Forbidden claims:
 
