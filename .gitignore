@@ -1,0 +1,52 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.idea/
+.vscode/
+config/temp/*
+!config/temp/README.md
+
+# Generated / heavy / external data
+dataset/
+dataset/raw/
+dataset/processed/
+dataset/cache/
+dataset/artifacts/
+dataset/kb/
+
+# Generated training artifacts
+checkpoints/
+outputs/
+runs/
+*.log
+*.pt
+*.h5ad
+
+# Regenerable feature caches that live next to tracked benchmark data
+morgan_cache_*.npy
+dataset/kiba/Y.truncated.bak
+
+# Local archive material
+outputs/archive/*
+idea/research-runs/
+
+# Secrets
+.env
+pip-dl-sota-runs/
+pip-dl-sota-runs-runs/
+file/
+
+# Local credentials / transfer scratch
+agent.md
+remote_tmp_*.json
+
+# --- Canonical evidence policy -------------------------------------------------
+# TRACKED (claim-defining, small, recoverable via git):
+#   config/*.json   -> frozen model inputs incl. prior-calibration.json (validation-derived tau)
+#   doc/*.md, doc/*.json -> verification gate, frozen result summaries, split-equivalence,
+#                           cross-dataset + re-freeze reports, evidence-schema2.json
+# IGNORED (heavy / regenerable, reproducible from checkpoints + canonical config):
+#   outputs/ (per-cell records, checkpoints), dataset/cache (features, morgan cache), *.pt
+# Rationale: anything that DEFINES a claim or the frozen operating point lives in config/ or doc/
+# (tracked); anything regenerable from those + checkpoints stays ignored. Do not commit *.pt.

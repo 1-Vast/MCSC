@@ -1,0 +1,135 @@
+{
+  "schema": "drugtarget-residual-alpha-calibration-v1",
+  "status": "experimental_frozen_candidate",
+  "selection": "split-level alpha chosen from training-only inner cold calibration scores",
+  "entries": [
+    {
+      "dataset": "DAVIS",
+      "drug": "morgan",
+      "targetRepresentation": "ctriad",
+      "targetRepresentationSource": "sequence-only conjoint triad",
+      "split": "family-cold",
+      "prior": "global_blend",
+      "refiner": "ResidualRefiner",
+      "residualPolicy": "split_level_cold_consensus",
+      "alpha": 0.25,
+      "alphaGrid": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "minDeltaR2": 0.005,
+      "signal": "inner_cold_r2_by_alpha",
+      "selectionMetric": "mean inner cold-validation R2 across seed calibration folds",
+      "calibrationMeanR2ByAlpha": {
+        "0.0": 0.1785,
+        "0.25": 0.1869,
+        "0.5": 0.1781,
+        "0.75": 0.1521,
+        "1.0": 0.1091
+      },
+      "selectedAlphaCalibrationR2": 0.1869,
+      "priorOnlyCalibrationR2": 0.1785,
+      "nCalibrationSeeds": 8,
+      "source": "experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+    },
+    {
+      "dataset": "DAVIS",
+      "drug": "morgan",
+      "targetRepresentation": "ctriad",
+      "targetRepresentationSource": "sequence-only conjoint triad",
+      "split": "target-cold",
+      "prior": "global_blend",
+      "refiner": "ResidualRefiner",
+      "residualPolicy": "split_level_cold_consensus",
+      "alpha": 0.5,
+      "alphaGrid": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "minDeltaR2": 0.005,
+      "signal": "inner_cold_r2_by_alpha",
+      "selectionMetric": "mean inner cold-validation R2 across seed calibration folds",
+      "calibrationMeanR2ByAlpha": {
+        "0.0": 0.4021,
+        "0.25": 0.4345,
+        "0.5": 0.4461,
+        "0.75": 0.4371,
+        "1.0": 0.4073
+      },
+      "selectedAlphaCalibrationR2": 0.4461,
+      "priorOnlyCalibrationR2": 0.4021,
+      "nCalibrationSeeds": 8,
+      "source": "experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+    },
+    {
+      "dataset": "KIBA",
+      "drug": "morgan",
+      "targetRepresentation": "esm2_t30_150M_UR50D",
+      "targetRepresentationSource": "frozen sequence-only ESM-2 150M",
+      "split": "cluster-cold",
+      "prior": "global_blend",
+      "refiner": "ResidualRefiner",
+      "residualPolicy": "split_level_cold_consensus",
+      "alpha": 0.5,
+      "alphaGrid": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "minDeltaR2": 0.005,
+      "signal": "inner_cold_r2_by_alpha",
+      "selectionMetric": "mean inner cold-validation R2 across seed calibration folds",
+      "calibrationMeanR2ByAlpha": {
+        "0.0": 0.3747,
+        "0.25": 0.3975,
+        "0.5": 0.408,
+        "0.75": 0.4063,
+        "1.0": 0.3923
+      },
+      "selectedAlphaCalibrationR2": 0.408,
+      "priorOnlyCalibrationR2": 0.3747,
+      "nCalibrationSeeds": 8,
+      "source": "experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+    },
+    {
+      "dataset": "KIBA",
+      "drug": "morgan",
+      "targetRepresentation": "esm2_t30_150M_UR50D",
+      "targetRepresentationSource": "frozen sequence-only ESM-2 150M",
+      "split": "target-cold",
+      "prior": "global_blend",
+      "refiner": "ResidualRefiner",
+      "residualPolicy": "split_level_cold_consensus",
+      "alpha": 0.5,
+      "alphaGrid": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "minDeltaR2": 0.005,
+      "signal": "inner_cold_r2_by_alpha",
+      "selectionMetric": "mean inner cold-validation R2 across seed calibration folds",
+      "calibrationMeanR2ByAlpha": {
+        "0.0": 0.3838,
+        "0.25": 0.4044,
+        "0.5": 0.4124,
+        "0.75": 0.4077,
+        "1.0": 0.3903
+      },
+      "selectedAlphaCalibrationR2": 0.4124,
+      "priorOnlyCalibrationR2": 0.3838,
+      "nCalibrationSeeds": 8,
+      "source": "experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+    }
+  ]
+}

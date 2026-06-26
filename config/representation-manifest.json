@@ -1,0 +1,24 @@
+{
+  "dataset": "kiba",
+  "n_targets": 229,
+  "reps": {
+    "esm_t6_8M_UR50D": {
+      "model": "facebook/esm2_t6_8M_UR50D",
+      "dim": 320,
+      "cache": "esm_esm2_t6_8M_UR50D_n229_bf3be2c88f4e.npy",
+      "sha12": "bf3be2c88f4e",
+      "pooling": "mean",
+      "max_len": 1022,
+      "source": "sequence-only frozen ESM-2"
+    },
+    "esm_t30_150M_UR50D": {
+      "model": "facebook/esm2_t30_150M_UR50D",
+      "dim": 640,
+      "cache": "esm_esm2_t30_150M_UR50D_n229_6e7e603eef1b.npy",
+      "sha12": "6e7e603eef1b",
+      "pooling": "mean",
+      "max_len": 1022,
+      "source": "sequence-only frozen ESM-2"
+    }
+  }
+}

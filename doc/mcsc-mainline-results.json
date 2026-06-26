@@ -1,0 +1,1572 @@
+{
+  "schema": "drugtarget-mcsc-mainline-results-v1",
+  "status": "trainable_mainline",
+  "model": "MCSC",
+  "variant": "MCSC-FrozenAlpha",
+  "formula": "prior + alpha * (refiner - prior)",
+  "training": "python main.py mcsc --stage train",
+  "inference": "python main.py mcsc --stage infer",
+  "claimScope": "reproduced-frontier SOTA-level only under this repository's same split/seed/metric protocol",
+  "cells": {
+    "DAVIS/family-cold": {
+      "dataset": "DAVIS",
+      "split": "family-cold",
+      "nSeeds": 8,
+      "targetRepresentation": "ctriad",
+      "alpha": 0.25,
+      "summary": {
+        "prior_only": {
+          "R2": 0.2555,
+          "MSE": 0.5464,
+          "RMSE": 0.7297,
+          "Pearson": 0.5418,
+          "Spearman": 0.5196,
+          "harm_worse": 0.0,
+          "worstgrp_R2": 0.1696
+        },
+        "full_refiner": {
+          "R2": 0.2823,
+          "MSE": 0.5111,
+          "RMSE": 0.7108,
+          "Pearson": 0.5538,
+          "Spearman": 0.5007,
+          "harm_worse": 0.3297,
+          "worstgrp_R2": 0.1506
+        },
+        "mcsc_frozen_alpha": {
+          "R2": 0.2915,
+          "MSE": 0.5158,
+          "RMSE": 0.7106,
+          "Pearson": 0.5673,
+          "Spearman": 0.5337,
+          "harm_worse": 0.3115,
+          "worstgrp_R2": 0.205
+        }
+      },
+      "deltaVsPrior": {
+        "mean": 0.036,
+        "ci95": [
+          0.0217,
+          0.0538
+        ],
+        "wins": "8/8"
+      },
+      "deltaVsFullRefiner": {
+        "mean": 0.0092,
+        "ci95": [
+          -0.0317,
+          0.0481
+        ],
+        "wins": "5/8"
+      },
+      "perSeed": [
+        {
+          "dataset": "DAVIS",
+          "split": "family-cold",
+          "seed": 1,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_family_cold_seed1.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.7000000000000001,
+          "frozenAlpha": 0.25,
+          "validationBasis": "cold_family",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.2569,
+              "MSE": 0.3651,
+              "RMSE": 0.6043,
+              "Pearson": 0.5605,
+              "Spearman": 0.4974,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.167
+            },
+            "full_refiner": {
+              "R2": 0.1634,
+              "MSE": 0.4111,
+              "RMSE": 0.6412,
+              "Pearson": 0.485,
+              "Spearman": 0.4165,
+              "harm_worse": 0.285131,
+              "worstgrp_R2": 0.089
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.2649,
+              "MSE": 0.3612,
+              "RMSE": 0.601,
+              "Pearson": 0.5521,
+              "Spearman": 0.4859,
+              "harm_worse": 0.271242,
+              "worstgrp_R2": 0.1743
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "family-cold",
+          "seed": 2,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_family_cold_seed2.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.05,
+          "frozenAlpha": 0.25,
+          "validationBasis": "cold_family",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.2613,
+              "MSE": 0.4198,
+              "RMSE": 0.648,
+              "Pearson": 0.5332,
+              "Spearman": 0.489,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.1802
+            },
+            "full_refiner": {
+              "R2": 0.2548,
+              "MSE": 0.4235,
+              "RMSE": 0.6508,
+              "Pearson": 0.5174,
+              "Spearman": 0.484,
+              "harm_worse": 0.34144,
+              "worstgrp_R2": 0.2144
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.2908,
+              "MSE": 0.4031,
+              "RMSE": 0.6349,
+              "Pearson": 0.5516,
+              "Spearman": 0.5087,
+              "harm_worse": 0.320701,
+              "worstgrp_R2": 0.2282
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "family-cold",
+          "seed": 3,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_family_cold_seed3.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.45,
+          "frozenAlpha": 0.25,
+          "validationBasis": "cold_family",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.3129,
+              "MSE": 0.4317,
+              "RMSE": 0.657,
+              "Pearson": 0.5823,
+              "Spearman": 0.5589,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.2945
+            },
+            "full_refiner": {
+              "R2": 0.2815,
+              "MSE": 0.4514,
+              "RMSE": 0.6719,
+              "Pearson": 0.559,
+              "Spearman": 0.5309,
+              "harm_worse": 0.30574,
+              "worstgrp_R2": 0.0745
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.3357,
+              "MSE": 0.4174,
+              "RMSE": 0.6461,
+              "Pearson": 0.5919,
+              "Spearman": 0.5659,
+              "harm_worse": 0.287713,
+              "worstgrp_R2": 0.2933
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "family-cold",
+          "seed": 4,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_family_cold_seed4.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 1.0,
+          "frozenAlpha": 0.25,
+          "validationBasis": "cold_family",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.268,
+              "MSE": 0.4608,
+              "RMSE": 0.6788,
+              "Pearson": 0.5438,
+              "Spearman": 0.4969,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.191
+            },
+            "full_refiner": {
+              "R2": 0.2871,
+              "MSE": 0.4488,
+              "RMSE": 0.6699,
+              "Pearson": 0.5431,
+              "Spearman": 0.4691,
+              "harm_worse": 0.344713,
+              "worstgrp_R2": 0.18
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.2928,
+              "MSE": 0.4452,
+              "RMSE": 0.6672,
+              "Pearson": 0.5586,
+              "Spearman": 0.5029,
+              "harm_worse": 0.325455,
+              "worstgrp_R2": 0.2155
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "family-cold",
+          "seed": 5,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_family_cold_seed5.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.7000000000000001,
+          "frozenAlpha": 0.25,
+          "validationBasis": "cold_family",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.2502,
+              "MSE": 0.404,
+              "RMSE": 0.6356,
+              "Pearson": 0.5514,
+              "Spearman": 0.4755,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.1977
+            },
+            "full_refiner": {
+              "R2": 0.2303,
+              "MSE": 0.4147,
+              "RMSE": 0.6439,
+              "Pearson": 0.5318,
+              "Spearman": 0.4366,
+              "harm_worse": 0.269683,
+              "worstgrp_R2": 0.0501
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.2732,
+              "MSE": 0.3916,
+              "RMSE": 0.6258,
+              "Pearson": 0.5608,
+              "Spearman": 0.4759,
+              "harm_worse": 0.257919,
+              "worstgrp_R2": 0.2094
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "family-cold",
+          "seed": 6,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_family_cold_seed6.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.05,
+          "frozenAlpha": 0.25,
+          "validationBasis": "cold_family",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.2021,
+              "MSE": 0.8033,
+              "RMSE": 0.8963,
+              "Pearson": 0.4825,
+              "Spearman": 0.5347,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.1489
+            },
+            "full_refiner": {
+              "R2": 0.3025,
+              "MSE": 0.7022,
+              "RMSE": 0.838,
+              "Pearson": 0.5656,
+              "Spearman": 0.5284,
+              "harm_worse": 0.404525,
+              "worstgrp_R2": 0.2072
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.2602,
+              "MSE": 0.7449,
+              "RMSE": 0.863,
+              "Pearson": 0.5402,
+              "Spearman": 0.5671,
+              "harm_worse": 0.381448,
+              "worstgrp_R2": 0.2226
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "family-cold",
+          "seed": 7,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_family_cold_seed7.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.05,
+          "frozenAlpha": 0.25,
+          "validationBasis": "cold_family",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.1693,
+              "MSE": 0.8751,
+              "RMSE": 0.9355,
+              "Pearson": 0.445,
+              "Spearman": 0.5038,
+              "harm_worse": 0.0,
+              "worstgrp_R2": -0.0781
+            },
+            "full_refiner": {
+              "R2": 0.3485,
+              "MSE": 0.6863,
+              "RMSE": 0.8284,
+              "Pearson": 0.598,
+              "Spearman": 0.5696,
+              "harm_worse": 0.404291,
+              "worstgrp_R2": 0.0288
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.2569,
+              "MSE": 0.7828,
+              "RMSE": 0.8848,
+              "Pearson": 0.5362,
+              "Spearman": 0.5596,
+              "harm_worse": 0.379942,
+              "worstgrp_R2": -0.0035
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "family-cold",
+          "seed": 8,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_family_cold_seed8.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.55,
+          "frozenAlpha": 0.25,
+          "validationBasis": "cold_family",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.3234,
+              "MSE": 0.611,
+              "RMSE": 0.7817,
+              "Pearson": 0.6354,
+              "Spearman": 0.6007,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.2555
+            },
+            "full_refiner": {
+              "R2": 0.3903,
+              "MSE": 0.5506,
+              "RMSE": 0.742,
+              "Pearson": 0.6306,
+              "Spearman": 0.5708,
+              "harm_worse": 0.282221,
+              "worstgrp_R2": 0.3607
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.3577,
+              "MSE": 0.58,
+              "RMSE": 0.7616,
+              "Pearson": 0.6467,
+              "Spearman": 0.6034,
+              "harm_worse": 0.267184,
+              "worstgrp_R2": 0.2999
+            }
+          }
+        }
+      ]
+    },
+    "DAVIS/target-cold": {
+      "dataset": "DAVIS",
+      "split": "target-cold",
+      "nSeeds": 8,
+      "targetRepresentation": "ctriad",
+      "alpha": 0.5,
+      "summary": {
+        "prior_only": {
+          "R2": 0.4539,
+          "MSE": 0.4383,
+          "RMSE": 0.6616,
+          "Pearson": 0.7435,
+          "Spearman": 0.6276,
+          "harm_worse": 0.0,
+          "worstgrp_R2": 0.361
+        },
+        "full_refiner": {
+          "R2": 0.4886,
+          "MSE": 0.4103,
+          "RMSE": 0.6401,
+          "Pearson": 0.7036,
+          "Spearman": 0.5504,
+          "harm_worse": 0.3094,
+          "worstgrp_R2": 0.3813
+        },
+        "mcsc_frozen_alpha": {
+          "R2": 0.4938,
+          "MSE": 0.4063,
+          "RMSE": 0.637,
+          "Pearson": 0.7344,
+          "Spearman": 0.5864,
+          "harm_worse": 0.2901,
+          "worstgrp_R2": 0.3955
+        }
+      },
+      "deltaVsPrior": {
+        "mean": 0.0398,
+        "ci95": [
+          0.0362,
+          0.043
+        ],
+        "wins": "8/8"
+      },
+      "deltaVsFullRefiner": {
+        "mean": 0.0052,
+        "ci95": [
+          0.002,
+          0.009
+        ],
+        "wins": "7/8"
+      },
+      "perSeed": [
+        {
+          "dataset": "DAVIS",
+          "split": "target-cold",
+          "seed": 1,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_target_cold_seed1.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.9500000000000001,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4289,
+              "MSE": 0.4913,
+              "RMSE": 0.7009,
+              "Pearson": 0.7304,
+              "Spearman": 0.6253,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.2661
+            },
+            "full_refiner": {
+              "R2": 0.4741,
+              "MSE": 0.4525,
+              "RMSE": 0.6727,
+              "Pearson": 0.6933,
+              "Spearman": 0.5658,
+              "harm_worse": 0.296123,
+              "worstgrp_R2": 0.2823
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.4756,
+              "MSE": 0.4512,
+              "RMSE": 0.6717,
+              "Pearson": 0.7223,
+              "Spearman": 0.5965,
+              "harm_worse": 0.268494,
+              "worstgrp_R2": 0.3
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "target-cold",
+          "seed": 2,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_target_cold_seed2.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 1.0,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.466,
+              "MSE": 0.483,
+              "RMSE": 0.695,
+              "Pearson": 0.7659,
+              "Spearman": 0.6578,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.3829
+            },
+            "full_refiner": {
+              "R2": 0.4996,
+              "MSE": 0.4527,
+              "RMSE": 0.6728,
+              "Pearson": 0.7193,
+              "Spearman": 0.5721,
+              "harm_worse": 0.323864,
+              "worstgrp_R2": 0.4334
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.5007,
+              "MSE": 0.4516,
+              "RMSE": 0.672,
+              "Pearson": 0.7519,
+              "Spearman": 0.6103,
+              "harm_worse": 0.306261,
+              "worstgrp_R2": 0.4247
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "target-cold",
+          "seed": 3,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_target_cold_seed3.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 1.0,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4312,
+              "MSE": 0.4624,
+              "RMSE": 0.68,
+              "Pearson": 0.7138,
+              "Spearman": 0.6145,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.327
+            },
+            "full_refiner": {
+              "R2": 0.4654,
+              "MSE": 0.4346,
+              "RMSE": 0.6592,
+              "Pearson": 0.6835,
+              "Spearman": 0.5366,
+              "harm_worse": 0.300245,
+              "worstgrp_R2": 0.3364
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.4721,
+              "MSE": 0.4292,
+              "RMSE": 0.6551,
+              "Pearson": 0.7105,
+              "Spearman": 0.5724,
+              "harm_worse": 0.280526,
+              "worstgrp_R2": 0.3593
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "target-cold",
+          "seed": 4,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_target_cold_seed4.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 1.0,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4598,
+              "MSE": 0.4215,
+              "RMSE": 0.6492,
+              "Pearson": 0.7488,
+              "Spearman": 0.6218,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.3443
+            },
+            "full_refiner": {
+              "R2": 0.5022,
+              "MSE": 0.3884,
+              "RMSE": 0.6232,
+              "Pearson": 0.7145,
+              "Spearman": 0.5429,
+              "harm_worse": 0.272616,
+              "worstgrp_R2": 0.3653
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.5017,
+              "MSE": 0.3888,
+              "RMSE": 0.6235,
+              "Pearson": 0.7432,
+              "Spearman": 0.5738,
+              "harm_worse": 0.257799,
+              "worstgrp_R2": 0.3714
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "target-cold",
+          "seed": 5,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_target_cold_seed5.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 1.0,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4739,
+              "MSE": 0.4267,
+              "RMSE": 0.6532,
+              "Pearson": 0.7657,
+              "Spearman": 0.6549,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.4234
+            },
+            "full_refiner": {
+              "R2": 0.5129,
+              "MSE": 0.3951,
+              "RMSE": 0.6285,
+              "Pearson": 0.7215,
+              "Spearman": 0.554,
+              "harm_worse": 0.332219,
+              "worstgrp_R2": 0.4478
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.5162,
+              "MSE": 0.3924,
+              "RMSE": 0.6264,
+              "Pearson": 0.7557,
+              "Spearman": 0.5991,
+              "harm_worse": 0.311497,
+              "worstgrp_R2": 0.46
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "target-cold",
+          "seed": 6,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_target_cold_seed6.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 1.0,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4762,
+              "MSE": 0.3994,
+              "RMSE": 0.632,
+              "Pearson": 0.7469,
+              "Spearman": 0.6185,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.3689
+            },
+            "full_refiner": {
+              "R2": 0.5029,
+              "MSE": 0.379,
+              "RMSE": 0.6156,
+              "Pearson": 0.7153,
+              "Spearman": 0.5543,
+              "harm_worse": 0.326872,
+              "worstgrp_R2": 0.3584
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.506,
+              "MSE": 0.3766,
+              "RMSE": 0.6137,
+              "Pearson": 0.7402,
+              "Spearman": 0.5872,
+              "harm_worse": 0.313503,
+              "worstgrp_R2": 0.385
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "target-cold",
+          "seed": 7,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_target_cold_seed7.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 1.0,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4577,
+              "MSE": 0.4183,
+              "RMSE": 0.6468,
+              "Pearson": 0.7481,
+              "Spearman": 0.6253,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.394
+            },
+            "full_refiner": {
+              "R2": 0.4845,
+              "MSE": 0.3977,
+              "RMSE": 0.6306,
+              "Pearson": 0.6971,
+              "Spearman": 0.5429,
+              "harm_worse": 0.328988,
+              "worstgrp_R2": 0.4261
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.5001,
+              "MSE": 0.3856,
+              "RMSE": 0.621,
+              "Pearson": 0.7349,
+              "Spearman": 0.5833,
+              "harm_worse": 0.308155,
+              "worstgrp_R2": 0.4461
+            }
+          }
+        },
+        {
+          "dataset": "DAVIS",
+          "split": "target-cold",
+          "seed": 8,
+          "checkpoint": "outputs/mcsc/checkpoints/davis_target_cold_seed8.pt",
+          "targetRepresentation": "ctriad",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 1.0,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4377,
+              "MSE": 0.4036,
+              "RMSE": 0.6353,
+              "Pearson": 0.7281,
+              "Spearman": 0.6025,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.3813
+            },
+            "full_refiner": {
+              "R2": 0.4672,
+              "MSE": 0.3824,
+              "RMSE": 0.6183,
+              "Pearson": 0.6844,
+              "Spearman": 0.5348,
+              "harm_worse": 0.294452,
+              "worstgrp_R2": 0.401
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.4777,
+              "MSE": 0.3748,
+              "RMSE": 0.6122,
+              "Pearson": 0.7165,
+              "Spearman": 0.569,
+              "harm_worse": 0.274176,
+              "worstgrp_R2": 0.4178
+            }
+          }
+        }
+      ]
+    },
+    "KIBA/cluster-cold": {
+      "dataset": "KIBA",
+      "split": "cluster-cold",
+      "nSeeds": 8,
+      "targetRepresentation": "esm2_t30_150M_UR50D",
+      "alpha": 0.5,
+      "summary": {
+        "prior_only": {
+          "R2": 0.3455,
+          "MSE": 0.42,
+          "RMSE": 0.6471,
+          "Pearson": 0.6115,
+          "Spearman": 0.5413,
+          "harm_worse": 0.0,
+          "worstgrp_R2": 0.1143
+        },
+        "full_refiner": {
+          "R2": 0.346,
+          "MSE": 0.4196,
+          "RMSE": 0.6464,
+          "Pearson": 0.5988,
+          "Spearman": 0.5058,
+          "harm_worse": 0.4214,
+          "worstgrp_R2": -0.0297
+        },
+        "mcsc_frozen_alpha": {
+          "R2": 0.3722,
+          "MSE": 0.4029,
+          "RMSE": 0.6335,
+          "Pearson": 0.6241,
+          "Spearman": 0.5408,
+          "harm_worse": 0.3929,
+          "worstgrp_R2": 0.0858
+        }
+      },
+      "deltaVsPrior": {
+        "mean": 0.0267,
+        "ci95": [
+          0.0131,
+          0.0403
+        ],
+        "wins": "7/8"
+      },
+      "deltaVsFullRefiner": {
+        "mean": 0.0262,
+        "ci95": [
+          0.0102,
+          0.041
+        ],
+        "wins": "7/8"
+      },
+      "perSeed": [
+        {
+          "dataset": "KIBA",
+          "split": "cluster-cold",
+          "seed": 1,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_cluster_cold_seed1.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.65,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.3165,
+              "MSE": 0.436,
+              "RMSE": 0.6603,
+              "Pearson": 0.5804,
+              "Spearman": 0.5052,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.0991
+            },
+            "full_refiner": {
+              "R2": 0.3568,
+              "MSE": 0.4103,
+              "RMSE": 0.6406,
+              "Pearson": 0.6153,
+              "Spearman": 0.5038,
+              "harm_worse": 0.420029,
+              "worstgrp_R2": 0.1511
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.3582,
+              "MSE": 0.4094,
+              "RMSE": 0.6399,
+              "Pearson": 0.616,
+              "Spearman": 0.5204,
+              "harm_worse": 0.393555,
+              "worstgrp_R2": 0.149
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "cluster-cold",
+          "seed": 2,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_cluster_cold_seed2.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.7000000000000001,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.3976,
+              "MSE": 0.3844,
+              "RMSE": 0.62,
+              "Pearson": 0.6591,
+              "Spearman": 0.5902,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.0479
+            },
+            "full_refiner": {
+              "R2": 0.4095,
+              "MSE": 0.3768,
+              "RMSE": 0.6139,
+              "Pearson": 0.6691,
+              "Spearman": 0.5697,
+              "harm_worse": 0.436186,
+              "worstgrp_R2": -0.0775
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.427,
+              "MSE": 0.3657,
+              "RMSE": 0.6047,
+              "Pearson": 0.6788,
+              "Spearman": 0.5925,
+              "harm_worse": 0.403329,
+              "worstgrp_R2": 0.0266
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "cluster-cold",
+          "seed": 3,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_cluster_cold_seed3.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.65,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.3345,
+              "MSE": 0.477,
+              "RMSE": 0.6906,
+              "Pearson": 0.5942,
+              "Spearman": 0.546,
+              "harm_worse": 0.0,
+              "worstgrp_R2": -0.1044
+            },
+            "full_refiner": {
+              "R2": 0.2711,
+              "MSE": 0.5224,
+              "RMSE": 0.7228,
+              "Pearson": 0.5343,
+              "Spearman": 0.4305,
+              "harm_worse": 0.49644,
+              "worstgrp_R2": -0.903
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.3296,
+              "MSE": 0.4805,
+              "RMSE": 0.6932,
+              "Pearson": 0.5803,
+              "Spearman": 0.4932,
+              "harm_worse": 0.474082,
+              "worstgrp_R2": -0.4255
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "cluster-cold",
+          "seed": 4,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_cluster_cold_seed4.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.5,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.3917,
+              "MSE": 0.3854,
+              "RMSE": 0.6208,
+              "Pearson": 0.6427,
+              "Spearman": 0.5717,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.325
+            },
+            "full_refiner": {
+              "R2": 0.3955,
+              "MSE": 0.383,
+              "RMSE": 0.6189,
+              "Pearson": 0.6342,
+              "Spearman": 0.5269,
+              "harm_worse": 0.425461,
+              "worstgrp_R2": 0.1761
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.4323,
+              "MSE": 0.3597,
+              "RMSE": 0.5998,
+              "Pearson": 0.6657,
+              "Spearman": 0.5716,
+              "harm_worse": 0.390512,
+              "worstgrp_R2": 0.3234
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "cluster-cold",
+          "seed": 5,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_cluster_cold_seed5.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.7000000000000001,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.425,
+              "MSE": 0.3481,
+              "RMSE": 0.59,
+              "Pearson": 0.6921,
+              "Spearman": 0.5808,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.0358
+            },
+            "full_refiner": {
+              "R2": 0.42,
+              "MSE": 0.3511,
+              "RMSE": 0.5925,
+              "Pearson": 0.6538,
+              "Spearman": 0.5721,
+              "harm_worse": 0.405293,
+              "worstgrp_R2": -0.1668
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.4513,
+              "MSE": 0.3322,
+              "RMSE": 0.5763,
+              "Pearson": 0.6932,
+              "Spearman": 0.5955,
+              "harm_worse": 0.38011,
+              "worstgrp_R2": -0.0046
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "cluster-cold",
+          "seed": 6,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_cluster_cold_seed6.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.6000000000000001,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.3421,
+              "MSE": 0.4009,
+              "RMSE": 0.6332,
+              "Pearson": 0.611,
+              "Spearman": 0.5522,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.2278
+            },
+            "full_refiner": {
+              "R2": 0.3013,
+              "MSE": 0.4257,
+              "RMSE": 0.6525,
+              "Pearson": 0.5705,
+              "Spearman": 0.4618,
+              "harm_worse": 0.419238,
+              "worstgrp_R2": 0.1875
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.3472,
+              "MSE": 0.3978,
+              "RMSE": 0.6307,
+              "Pearson": 0.6101,
+              "Spearman": 0.5277,
+              "harm_worse": 0.384009,
+              "worstgrp_R2": 0.2152
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "cluster-cold",
+          "seed": 7,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_cluster_cold_seed7.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.65,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.2005,
+              "MSE": 0.4847,
+              "RMSE": 0.6962,
+              "Pearson": 0.4633,
+              "Spearman": 0.4196,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.06
+            },
+            "full_refiner": {
+              "R2": 0.1816,
+              "MSE": 0.4961,
+              "RMSE": 0.7044,
+              "Pearson": 0.4391,
+              "Spearman": 0.3972,
+              "harm_worse": 0.326425,
+              "worstgrp_R2": 0.0926
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.2164,
+              "MSE": 0.4751,
+              "RMSE": 0.6893,
+              "Pearson": 0.4659,
+              "Spearman": 0.4288,
+              "harm_worse": 0.301781,
+              "worstgrp_R2": 0.128
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "cluster-cold",
+          "seed": 8,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_cluster_cold_seed8.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.55,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.3559,
+              "MSE": 0.4437,
+              "RMSE": 0.6661,
+              "Pearson": 0.6494,
+              "Spearman": 0.5646,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.2228
+            },
+            "full_refiner": {
+              "R2": 0.4321,
+              "MSE": 0.3912,
+              "RMSE": 0.6255,
+              "Pearson": 0.6741,
+              "Spearman": 0.5846,
+              "harm_worse": 0.442508,
+              "worstgrp_R2": 0.3027
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.4158,
+              "MSE": 0.4025,
+              "RMSE": 0.6344,
+              "Pearson": 0.683,
+              "Spearman": 0.5964,
+              "harm_worse": 0.415875,
+              "worstgrp_R2": 0.2745
+            }
+          }
+        }
+      ]
+    },
+    "KIBA/target-cold": {
+      "dataset": "KIBA",
+      "split": "target-cold",
+      "nSeeds": 8,
+      "targetRepresentation": "esm2_t30_150M_UR50D",
+      "alpha": 0.5,
+      "summary": {
+        "prior_only": {
+          "R2": 0.4631,
+          "MSE": 0.3689,
+          "RMSE": 0.607,
+          "Pearson": 0.7119,
+          "Spearman": 0.6299,
+          "harm_worse": 0.0,
+          "worstgrp_R2": 0.3064
+        },
+        "full_refiner": {
+          "R2": 0.502,
+          "MSE": 0.3418,
+          "RMSE": 0.584,
+          "Pearson": 0.7114,
+          "Spearman": 0.6162,
+          "harm_worse": 0.4058,
+          "worstgrp_R2": 0.2213
+        },
+        "mcsc_frozen_alpha": {
+          "R2": 0.5168,
+          "MSE": 0.3318,
+          "RMSE": 0.5757,
+          "Pearson": 0.7374,
+          "Spearman": 0.6463,
+          "harm_worse": 0.3699,
+          "worstgrp_R2": 0.3148
+        }
+      },
+      "deltaVsPrior": {
+        "mean": 0.0537,
+        "ci95": [
+          0.0415,
+          0.0658
+        ],
+        "wins": "8/8"
+      },
+      "deltaVsFullRefiner": {
+        "mean": 0.0147,
+        "ci95": [
+          0.0015,
+          0.0273
+        ],
+        "wins": "5/8"
+      },
+      "perSeed": [
+        {
+          "dataset": "KIBA",
+          "split": "target-cold",
+          "seed": 1,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_target_cold_seed1.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.6000000000000001,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4491,
+              "MSE": 0.3395,
+              "RMSE": 0.5826,
+              "Pearson": 0.7022,
+              "Spearman": 0.6253,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.3345
+            },
+            "full_refiner": {
+              "R2": 0.4699,
+              "MSE": 0.3267,
+              "RMSE": 0.5715,
+              "Pearson": 0.6943,
+              "Spearman": 0.604,
+              "harm_worse": 0.415345,
+              "worstgrp_R2": 0.3142
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.4869,
+              "MSE": 0.3161,
+              "RMSE": 0.5623,
+              "Pearson": 0.7187,
+              "Spearman": 0.6347,
+              "harm_worse": 0.380068,
+              "worstgrp_R2": 0.3843
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "target-cold",
+          "seed": 2,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_target_cold_seed2.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.55,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4467,
+              "MSE": 0.4044,
+              "RMSE": 0.636,
+              "Pearson": 0.6949,
+              "Spearman": 0.6179,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.3397
+            },
+            "full_refiner": {
+              "R2": 0.4327,
+              "MSE": 0.4146,
+              "RMSE": 0.6439,
+              "Pearson": 0.6611,
+              "Spearman": 0.5714,
+              "harm_worse": 0.438908,
+              "worstgrp_R2": 0.0447
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.4746,
+              "MSE": 0.384,
+              "RMSE": 0.6197,
+              "Pearson": 0.6997,
+              "Spearman": 0.6107,
+              "harm_worse": 0.403491,
+              "worstgrp_R2": 0.3108
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "target-cold",
+          "seed": 3,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_target_cold_seed3.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.35000000000000003,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4633,
+              "MSE": 0.3584,
+              "RMSE": 0.5987,
+              "Pearson": 0.6979,
+              "Spearman": 0.6031,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.3226
+            },
+            "full_refiner": {
+              "R2": 0.4747,
+              "MSE": 0.3508,
+              "RMSE": 0.5923,
+              "Pearson": 0.6894,
+              "Spearman": 0.5738,
+              "harm_worse": 0.42709,
+              "worstgrp_R2": 0.2517
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.5085,
+              "MSE": 0.3282,
+              "RMSE": 0.5729,
+              "Pearson": 0.7231,
+              "Spearman": 0.6116,
+              "harm_worse": 0.394329,
+              "worstgrp_R2": 0.3113
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "target-cold",
+          "seed": 4,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_target_cold_seed4.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.55,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4751,
+              "MSE": 0.3846,
+              "RMSE": 0.6202,
+              "Pearson": 0.732,
+              "Spearman": 0.6558,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.3503
+            },
+            "full_refiner": {
+              "R2": 0.5492,
+              "MSE": 0.3303,
+              "RMSE": 0.5747,
+              "Pearson": 0.7442,
+              "Spearman": 0.6562,
+              "harm_worse": 0.390569,
+              "worstgrp_R2": 0.2369
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.5441,
+              "MSE": 0.334,
+              "RMSE": 0.578,
+              "Pearson": 0.7651,
+              "Spearman": 0.6762,
+              "harm_worse": 0.358877,
+              "worstgrp_R2": 0.3217
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "target-cold",
+          "seed": 5,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_target_cold_seed5.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.45,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4209,
+              "MSE": 0.3994,
+              "RMSE": 0.632,
+              "Pearson": 0.6725,
+              "Spearman": 0.6018,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.2845
+            },
+            "full_refiner": {
+              "R2": 0.5079,
+              "MSE": 0.3394,
+              "RMSE": 0.5826,
+              "Pearson": 0.7143,
+              "Spearman": 0.6335,
+              "harm_worse": 0.386136,
+              "worstgrp_R2": 0.3618
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.4996,
+              "MSE": 0.3451,
+              "RMSE": 0.5875,
+              "Pearson": 0.726,
+              "Spearman": 0.6486,
+              "harm_worse": 0.356604,
+              "worstgrp_R2": 0.3548
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "target-cold",
+          "seed": 6,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_target_cold_seed6.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.55,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4816,
+              "MSE": 0.3371,
+              "RMSE": 0.5806,
+              "Pearson": 0.7251,
+              "Spearman": 0.6311,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.3058
+            },
+            "full_refiner": {
+              "R2": 0.5241,
+              "MSE": 0.3095,
+              "RMSE": 0.5563,
+              "Pearson": 0.7241,
+              "Spearman": 0.6433,
+              "harm_worse": 0.38117,
+              "worstgrp_R2": 0.1872
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.5478,
+              "MSE": 0.2941,
+              "RMSE": 0.5423,
+              "Pearson": 0.7556,
+              "Spearman": 0.6711,
+              "harm_worse": 0.328791,
+              "worstgrp_R2": 0.3199
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "target-cold",
+          "seed": 7,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_target_cold_seed7.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.65,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4775,
+              "MSE": 0.3644,
+              "RMSE": 0.6036,
+              "Pearson": 0.7337,
+              "Spearman": 0.6447,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.256
+            },
+            "full_refiner": {
+              "R2": 0.4889,
+              "MSE": 0.3565,
+              "RMSE": 0.597,
+              "Pearson": 0.7066,
+              "Spearman": 0.5856,
+              "harm_worse": 0.413873,
+              "worstgrp_R2": 0.1426
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.5141,
+              "MSE": 0.3388,
+              "RMSE": 0.5821,
+              "Pearson": 0.7411,
+              "Spearman": 0.6359,
+              "harm_worse": 0.373871,
+              "worstgrp_R2": 0.2324
+            }
+          }
+        },
+        {
+          "dataset": "KIBA",
+          "split": "target-cold",
+          "seed": 8,
+          "checkpoint": "outputs/mcsc/checkpoints/kiba_target_cold_seed8.pt",
+          "targetRepresentation": "esm2_t30_150M_UR50D",
+          "prior": "global_blend",
+          "device": "cuda",
+          "amp": true,
+          "blendWeight": 0.55,
+          "frozenAlpha": 0.5,
+          "validationBasis": "cold_target",
+          "metrics": {
+            "prior_only": {
+              "R2": 0.4902,
+              "MSE": 0.363,
+              "RMSE": 0.6025,
+              "Pearson": 0.7368,
+              "Spearman": 0.6593,
+              "harm_worse": 0.0,
+              "worstgrp_R2": 0.2579
+            },
+            "full_refiner": {
+              "R2": 0.5688,
+              "MSE": 0.307,
+              "RMSE": 0.5541,
+              "Pearson": 0.757,
+              "Spearman": 0.6616,
+              "harm_worse": 0.393653,
+              "worstgrp_R2": 0.2316
+            },
+            "mcsc_frozen_alpha": {
+              "R2": 0.5586,
+              "MSE": 0.3143,
+              "RMSE": 0.5606,
+              "Pearson": 0.7702,
+              "Spearman": 0.682,
+              "harm_worse": 0.363094,
+              "worstgrp_R2": 0.2828
+            }
+          }
+        }
+      ]
+    }
+  }
+}
