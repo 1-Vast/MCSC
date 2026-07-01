@@ -1,10 +1,16 @@
-"""Train-only kNN interaction memory used as the MCSC prior."""
+"""Train-only kNN interaction memory used as the PRISM prior."""
 from __future__ import annotations
 
 import numpy as np
 import torch
 
 from model.encode import normalize_descriptors
+
+
+def _long_index(values, device: torch.device) -> torch.Tensor:
+    if torch.is_tensor(values):
+        return values.to(device=device, dtype=torch.long)
+    return torch.as_tensor(np.asarray(values, dtype=np.int64), dtype=torch.long, device=device)
 
 
 class InteractionMemory:
@@ -55,12 +61,11 @@ class InteractionMemory:
         sim = query_feat @ key_feat.t()
         sim = sim.masked_fill(~known_mask, -float("inf"))
         known_count = known_mask.sum(dim=1)
-        k = min(self.k, int(known_count.max().item()))
+        k = min(self.k, key_feat.shape[0])
         if k == 0:
             return None, None
         empty = known_count == 0
-        if empty.any():
-            sim[empty, 0] = 0.0
+        sim = torch.where(empty.unsqueeze(1), torch.zeros_like(sim), sim)
         top_vals, top_idx = sim.topk(k, dim=1)
         weights = torch.softmax(top_vals / max(self.temperature, 1e-6), dim=1)
         weights = torch.where(
@@ -131,18 +136,43 @@ class InteractionMemory:
         elif self.mode == "target":
             pred = self._predict_target_side(drug, target, exclude_self)
         else:
-            drug_pred = torch.nan_to_num(
-                self._predict_drug_side(drug, target, exclude_self),
-                nan=self.global_mean,
-            )
-            target_pred = torch.nan_to_num(
-                self._predict_target_side(drug, target, exclude_self),
-                nan=self.global_mean,
-            )
+            drug_pred = self._fill_nan(self._predict_drug_side(drug, target, exclude_self))
+            target_pred = self._fill_nan(self._predict_target_side(drug, target, exclude_self))
             pred = (drug_pred + target_pred) / 2.0
 
-        pred = torch.nan_to_num(pred, nan=self.global_mean)
+        pred = self._fill_nan(pred)
         return pred.cpu().numpy()
+
+    def _fill_nan(self, values: torch.Tensor) -> torch.Tensor:
+        return torch.where(torch.isnan(values), self.global_mean.expand_as(values), values)
+
+    @torch.no_grad()
+    def predict_tensor(
+        self,
+        drug_idx,
+        target_idx,
+        exclude_self: bool = False,
+        chunk_size: int | None = 32768,
+    ) -> torch.Tensor:
+        """GPU-resident prediction path used by the PRISM mainline."""
+        drug = _long_index(drug_idx, self.device)
+        target = _long_index(target_idx, self.device)
+        if chunk_size and len(drug) > chunk_size:
+            return torch.cat([
+                self.predict_tensor(drug[i:i + chunk_size], target[i:i + chunk_size],
+                                    exclude_self=exclude_self, chunk_size=None)
+                for i in range(0, len(drug), chunk_size)
+            ], dim=0)
+
+        if self.mode == "drug":
+            pred = self._predict_drug_side(drug, target, exclude_self)
+        elif self.mode == "target":
+            pred = self._predict_target_side(drug, target, exclude_self)
+        else:
+            drug_pred = self._fill_nan(self._predict_drug_side(drug, target, exclude_self))
+            target_pred = self._fill_nan(self._predict_target_side(drug, target, exclude_self))
+            pred = (drug_pred + target_pred) / 2.0
+        return self._fill_nan(pred)
 
     @torch.no_grad()
     def memory_features(
@@ -156,23 +186,31 @@ class InteractionMemory:
         [drug_side_prior, target_side_prior, |disagreement|, drug_coverage, target_coverage].
         Coverage is 1.0 when that side retrieved at least one train neighbor, else 0.0 (and
         the prior falls back to the global train mean). exclude_self mirrors predict()."""
-        drug_np = np.ascontiguousarray(np.asarray(drug_idx, dtype=np.int64))
-        target_np = np.ascontiguousarray(np.asarray(target_idx, dtype=np.int64))
-        if chunk_size and len(drug_np) > chunk_size:
+        return self.memory_features_tensor(drug_idx, target_idx, exclude_self, chunk_size)
+
+    @torch.no_grad()
+    def memory_features_tensor(
+        self,
+        drug_idx,
+        target_idx,
+        exclude_self: bool = False,
+        chunk_size: int | None = 32768,
+    ) -> torch.Tensor:
+        """GPU-resident memory diagnostics used by the PRISM mainline."""
+        drug = _long_index(drug_idx, self.device)
+        target = _long_index(target_idx, self.device)
+        if chunk_size and len(drug) > chunk_size:
             return torch.cat([
-                self.memory_features(drug_np[i:i + chunk_size], target_np[i:i + chunk_size],
-                                     exclude_self=exclude_self, chunk_size=None)
-                for i in range(0, len(drug_np), chunk_size)
+                self.memory_features_tensor(drug[i:i + chunk_size], target[i:i + chunk_size],
+                                            exclude_self=exclude_self, chunk_size=None)
+                for i in range(0, len(drug), chunk_size)
             ], dim=0)
-        drug = torch.as_tensor(drug_np, dtype=torch.long, device=self.device)
-        target = torch.as_tensor(target_np, dtype=torch.long, device=self.device)
         d = self._predict_drug_side(drug, target, exclude_self)
         t = self._predict_target_side(drug, target, exclude_self)
         d_cov = (~torch.isnan(d)).float()
         t_cov = (~torch.isnan(t)).float()
-        gm = float(self.global_mean)
-        d_fill = torch.nan_to_num(d, nan=gm)
-        t_fill = torch.nan_to_num(t, nan=gm)
+        d_fill = self._fill_nan(d)
+        t_fill = self._fill_nan(t)
         disagree = (d_fill - t_fill).abs()
         return torch.stack([d_fill, t_fill, disagree, d_cov, t_cov], dim=1)
 

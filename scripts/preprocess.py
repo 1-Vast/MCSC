@@ -12,12 +12,7 @@ sys.path.insert(0, str(REPO))
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build DrugTarget features")
-    parser.add_argument(
-        "--target",
-        default="kb",
-        choices=["kb", "deepseek", "name"],
-        help="Target descriptor source.",
-    )
+    parser.add_argument("--target", default="kb", choices=["kb"], help="Pure public target descriptor source.")
     parser.add_argument(
         "--drug",
         default="morgan",
@@ -26,8 +21,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--device",
-        default="auto",
-        choices=["auto", "cpu", "cuda"],
+        default="cuda",
+        choices=["cuda"],
         help=argparse.SUPPRESS,
     )
     return parser.parse_args()

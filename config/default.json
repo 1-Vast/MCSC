@@ -6,5 +6,5 @@
   "device": "auto",
   "dataDir": "dataset/davis",
   "cacheDir": "dataset/cache",
-  "recordDir": "outputs/mcsc"
+  "recordDir": "outputs/prism"
 }

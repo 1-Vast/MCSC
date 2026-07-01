@@ -1,4 +1,4 @@
-{
+﻿{
   "schema": "drugtarget-residual-alpha-calibration-v1",
   "status": "experimental_frozen_candidate",
   "selection": "split-level alpha chosen from training-only inner cold calibration scores",
@@ -10,7 +10,7 @@
       "targetRepresentationSource": "sequence-only conjoint triad",
       "split": "family-cold",
       "prior": "global_blend",
-      "refiner": "ResidualRefiner",
+      "refiner": "PrismMemoryRefiner",
       "residualPolicy": "split_level_cold_consensus",
       "alpha": 0.25,
       "alphaGrid": [
@@ -33,7 +33,7 @@
       "selectedAlphaCalibrationR2": 0.1869,
       "priorOnlyCalibrationR2": 0.1785,
       "nCalibrationSeeds": 8,
-      "source": "experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+      "source": "externalresearch/experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
     },
     {
       "dataset": "DAVIS",
@@ -42,7 +42,7 @@
       "targetRepresentationSource": "sequence-only conjoint triad",
       "split": "target-cold",
       "prior": "global_blend",
-      "refiner": "ResidualRefiner",
+      "refiner": "PrismMemoryRefiner",
       "residualPolicy": "split_level_cold_consensus",
       "alpha": 0.5,
       "alphaGrid": [
@@ -65,7 +65,7 @@
       "selectedAlphaCalibrationR2": 0.4461,
       "priorOnlyCalibrationR2": 0.4021,
       "nCalibrationSeeds": 8,
-      "source": "experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+      "source": "externalresearch/experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
     },
     {
       "dataset": "KIBA",
@@ -74,7 +74,7 @@
       "targetRepresentationSource": "frozen sequence-only ESM-2 150M",
       "split": "cluster-cold",
       "prior": "global_blend",
-      "refiner": "ResidualRefiner",
+      "refiner": "PrismMemoryRefiner",
       "residualPolicy": "split_level_cold_consensus",
       "alpha": 0.5,
       "alphaGrid": [
@@ -97,7 +97,7 @@
       "selectedAlphaCalibrationR2": 0.408,
       "priorOnlyCalibrationR2": 0.3747,
       "nCalibrationSeeds": 8,
-      "source": "experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+      "source": "externalresearch/experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
     },
     {
       "dataset": "KIBA",
@@ -106,7 +106,7 @@
       "targetRepresentationSource": "frozen sequence-only ESM-2 150M",
       "split": "target-cold",
       "prior": "global_blend",
-      "refiner": "ResidualRefiner",
+      "refiner": "PrismMemoryRefiner",
       "residualPolicy": "split_level_cold_consensus",
       "alpha": 0.5,
       "alphaGrid": [
@@ -129,7 +129,7 @@
       "selectedAlphaCalibrationR2": 0.4124,
       "priorOnlyCalibrationR2": 0.3838,
       "nCalibrationSeeds": 8,
-      "source": "experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+      "source": "externalresearch/experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
     }
   ]
 }

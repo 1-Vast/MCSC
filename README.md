@@ -1,140 +1,89 @@
-# DrugTarget
+# PRISM
 
-This repository is a focused drug-target affinity project. The active trainable
-mainline is **MCSC-FrozenAlpha**.
+**PRISM** is the active drug-target affinity mainline in this repository:
+**Prototype-guided Reliability-Informed Selective Memory** prediction.
 
-## Mainline
+The method is intentionally compact. It combines a train-only interaction
+memory prior, a neural residual affinity refiner, GKN target-domain prototypes,
+and an offline DeepSeek-QC reliability audit that calibrates residual trust and
+selective defer. DeepSeek is not used as a live predictor during training or
+inference.
+
+## Architecture
 
 ```text
-prior = global_blend(fine_memory, drug_marginal; validation-selected w)
-refiner = ResidualRefiner(drug_descriptor, target_descriptor, prior)
-final = prior + alpha * (refiner - prior)
+prior = train-only interaction memory
+pair = neural drug-target representation
+domain = train-only GKN target-domain prototypes
+qc = offline DeepSeek mechanism quality audit
+final = prior + gamma(pair, memory, domain, qc) * residual(pair)
 ```
 
-- DAVIS target representation: sequence-only conjoint triad.
-- KIBA target representation: frozen sequence-only ESM-2 150M.
-- Alpha: frozen per dataset/split from calibration-only inner cold validation.
-- Model class: deep neural residual refiner in PyTorch, calibrated by a frozen
-  memory prior.
-- Device: CUDA-only for the active MCSC train/infer path; AMP is enabled.
+Core code lives under `model/`:
 
-The trainable component is a neural `ResidualRefiner`, so the current MCSC line
-is a deep learning model rather than a pure kNN or shallow regressor. The memory
-prior is frozen/calibrated and the neural residual learns the correction.
+- `PrismMemoryRefiner`: memory-calibrated neural affinity refiner.
+- `PrismSelectiveRefiner`: mechanism text adapter, GKN prototype distances, and
+  domain-aware defer gate.
+- `GraphKnowledgeNetwork`, `DomainDeferGate`, and prompt-profile adapters are
+  model components, not public scripts.
 
-## GPU Boundary
+Tooling lives under `scripts/` and is called through `main.py`.
 
-`python main.py mcsc --stage train|infer|full` keeps the active MCSC tensor path
-on CUDA: descriptor tensors, interaction-memory retrieval, residual-refiner
-training, AMP forward/backward, and batched inference. The canonical split
-construction, sklearn `KMeans(n_init=10)`, JSON loading, and feature-cache
-loading remain CPU-side by library/file-I/O design, but the trainable model path
-does not expose a CPU fallback.
+## Commands
 
-On this Windows workstation the verified CUDA interpreter is:
+Use the CUDA-enabled drug environment:
 
 ```powershell
-D:\anaconda\envs\drug\python.exe -c "import torch; print(torch.cuda.is_available())"
-```
-
-Using `C:\Python314\python.exe` will report CPU-only PyTorch and fail the GPU
-gate. Run the reproduction commands with the CUDA environment when checking GPU
-behavior.
-
-The public MCSC command intentionally exposes only the key reproducibility
-knobs: `--stage`, `--splits`, `--seeds`, `--force`, and `--batch-size`. Runtime
-monitoring and CPU/GPU switching are not model features and are not part of the
-mainline interface.
-
-Retired routes such as dispersion selectors, RCSC, RA-MCSC, full-refiner-only
-promotion, and selector search are summarized under
-`experiments/analysis/failed-directions-20260626/`.
-
-## Environment
-
-Recommended Windows/conda setup:
-
-```powershell
-conda create -n mcsc python=3.11 -y
-conda activate mcsc
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
-```
-
-The existing local CUDA environment used for verification is:
-
-```powershell
-D:\anaconda\envs\drug\python.exe -m pip install -r requirements.txt
 D:\anaconda\envs\drug\python.exe -c "import torch; print(torch.__version__, torch.cuda.is_available())"
 ```
 
-Python `venv` alternative:
+Public entry points:
 
 ```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
-```
-
-## Reproduce
-
-```powershell
-D:\anaconda\envs\drug\python.exe main.py mcsc --stage full
-D:\anaconda\envs\drug\python.exe main.py deepbaseline
-D:\anaconda\envs\drug\python.exe main.py graphbaseline
-D:\anaconda\envs\drug\python.exe main.py moltransbaseline
-D:\anaconda\envs\drug\python.exe main.py sotaevidence
+D:\anaconda\envs\drug\python.exe main.py prism --stage infer --splits KIBA/target-cold --seeds 1 --device cuda
+D:\anaconda\envs\drug\python.exe main.py train --splits KIBA/target-cold --seeds 1 --device cuda
+D:\anaconda\envs\drug\python.exe main.py infer --splits KIBA/target-cold --seeds 1 --device cuda
+D:\anaconda\envs\drug\python.exe main.py cache validate --splits KIBA/target-cold --seeds 1 2 3 4 5 --device cuda
+D:\anaconda\envs\drug\python.exe main.py audit
 D:\anaconda\envs\drug\python.exe main.py check
-D:\anaconda\envs\drug\python.exe main.py verifygate
-D:\anaconda\envs\drug\python.exe -m compileall -q main.py model scripts
 ```
 
-Convenience aliases:
+Training and inference are GPU-only. CPU fallback is rejected before the model
+path runs. Offline DeepSeek calls are allowed only through `main.py cache`; the
+train/infer scripts load cached mechanism-QC records and fail closed if required
+records are missing or partial.
 
-```powershell
-python main.py train   # mcsc --stage train
-python main.py infer   # mcsc --stage infer
-python main.py evidence
-```
+## Evidence Boundary
 
-If the KIBA ESM-2 cache is missing:
+PRISM promotes the DeepSeek-QC/GKN selective line only under these controls:
 
-```powershell
-python main.py plmcache
-```
+- GKN prototypes are built from inner-train targets only.
+- Validation may select checkpoints, residual shrinkage, and selective defer.
+- Test rows, held-out targets, and held-out families are final evaluation only.
+- DeepSeek summaries must not include labels, benchmark membership, split
+  membership, predictions, or affinity values.
+- Name-only and shuffle controls are kept as evidence against overclaiming
+  direct mechanism-text prediction.
 
-## Claim Boundary
+Allowed claim: PRISM is a mechanism-grounded, reliability-calibrated DTA
+architecture with explicit leakage controls and selective OOD behavior.
 
-Allowed wording: current MCSC is supported at the reproduced-frontier level
-under this repository's identical cold-split, 8-seed, validation-only protocol
-against the reproduced/adapted local frontier.
-
-Forbidden wording: global SOTA, paper-table comparisons, or superiority over
-unreproduced paper-faithful official GraphDTA/MolTrans/DrugBAN.
-
-## Optional LLM Boundary
-
-`python main.py api` can generate cached DeepSeek target descriptions for
-separate audits, but LLM/DeepSeek text is **not** part of the active MCSC
-mainline. Any DeepSeek cache is marked unsafe until reviewed and is filtered by
-the leakage audit before use in optional preprocessing paths.
+Rejected claim: raw LLM mechanism text alone improves affinity prediction. The
+strongest supported role for DeepSeek is quality audit plus residual confidence
+calibration and selective defer.
 
 ## Layout
 
 ```text
-main.py        public dispatcher
-model/         InteractionMemory, ResidualRefiner, metrics, global-blend prior
-scripts/       MCSC, baselines, PLM cache, checks, evidence builder
-dataset/       source datasets, KB sources, regenerable caches
-outputs/mcsc/  current MCSC checkpoints and manifest
-doc/           current reports and protocol notes
-experiments/   reproducibility containers and failure summaries
-config/        frozen calibration and representation manifests
+main.py             only public dispatcher
+model/              PRISM architecture and neural components
+scripts/            protocol runners, audits, cache builder, preprocessing
+dataset/            datasets and regenerable feature/cache files
+outputs/prism/      checkpoints and runtime outputs
+doc/prism-*.json    compact result records
+doc/prism-*.md      compact reports
+externalresearch/   retired experiments and historical records only
 ```
 
-`outputs/archive/`, retired executable branches, and old probe reports are not
-part of the current reproducible line; their lessons are summarized under
-`experiments/analysis/failed-directions-20260626/`.
+Historical MCSC/M3C-DTI/DTA-GKN names are retired records and are not public
+entry points for the current repository.

@@ -91,7 +91,7 @@ class RunSettings:
     device: str = "auto"
     data_dir: str = "dataset/davis"
     cache_dir: str = "dataset/cache"
-    record_dir: str = "outputs/mcsc"
+    record_dir: str = "outputs/prism"
 
     def repo_path(self, value: str | Path) -> Path:
         path = Path(value)

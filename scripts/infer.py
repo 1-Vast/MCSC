@@ -1,21 +1,21 @@
-"""Alias for evaluating the current MCSC mainline."""
+"""Alias for evaluating the PRISM mainline."""
 from __future__ import annotations
 
-import runpy
-import sys
-from pathlib import Path
+import os
 
-
-REPO = Path(__file__).resolve().parents[1]
+from scripts.dispatch import run_script
 
 
 def main() -> None:
-    old_argv = sys.argv
-    sys.argv = [str(REPO / "scripts" / "mcsc.py"), "--stage", "infer", *sys.argv[1:]]
+    old_entry = os.environ.get("DRUGTARGET_ENTRYPOINT")
+    os.environ["DRUGTARGET_ENTRYPOINT"] = "prism"
     try:
-        runpy.run_path(str(REPO / "scripts" / "mcsc.py"), run_name="__main__")
+        run_script("selectiveaffinity.py", "--stage", "infer")
     finally:
-        sys.argv = old_argv
+        if old_entry is None:
+            os.environ.pop("DRUGTARGET_ENTRYPOINT", None)
+        else:
+            os.environ["DRUGTARGET_ENTRYPOINT"] = old_entry
 
 
 if __name__ == "__main__":

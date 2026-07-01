@@ -30,6 +30,13 @@ dataset/kiba/Y.truncated.bak
 # Local archive material
 outputs/archive/*
 idea/research-runs/
+externalresearch/experiments/
+externalresearch/modeltools/
+externalresearch/runs/
+externalresearch/scripts/
+externalresearch/thirdparty/
+externalresearch/tmp/
+!externalresearch/README.md
 
 # Secrets
 .env
