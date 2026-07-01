@@ -1104,6 +1104,7 @@ def load_checkpoint(dataset: str, split: str, seed: int, args: argparse.Namespac
     if not path.exists():
         raise SystemExit(f"missing checkpoint: {repo_rel(path)}; run train first")
     payload = torch.load(path, map_location="cpu", weights_only=False)
+    validate_deepseek_cache_for_payload(payload)
     prompt_dim = int(payload["promptProfileTensor"].shape[-1]) if "promptProfileTensor" in payload else 0
     model = PrismSelectiveRefiner(
         int(payload["drugDim"]),
@@ -1123,6 +1124,38 @@ def load_checkpoint(dataset: str, split: str, seed: int, args: argparse.Namespac
     model.load_state_dict(payload["stateDict"])
     model.eval()
     return payload, model
+
+
+def validate_deepseek_cache_for_payload(payload: dict) -> None:
+    if payload.get("promptProfileSource") != "deepseek":
+        return
+    meta = payload.get("promptMeta") or {}
+    cache_name = meta.get("cache")
+    if not cache_name:
+        raise SystemExit("DeepSeek profile checkpoint is missing promptMeta.cache")
+    path = REPO / "dataset" / "cache" / "deepseek_promptdta" / str(cache_name)
+    if not path.exists():
+        raise SystemExit(
+            f"DeepSeek profile cache missing: {repo_rel(path)}; "
+            "rebuild with `python main.py cache build` before inference"
+        )
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if data.get("partial"):
+        raise SystemExit(f"DeepSeek profile cache is partial: {repo_rel(path)}")
+    expected = int(meta.get("nFamilies", payload.get("promptProfileTensor", torch.empty(0)).shape[0]))
+    families = data.get("families", {})
+    if int(data.get("nFamilies", -1)) != expected or len(families) != expected:
+        raise SystemExit(
+            f"DeepSeek profile cache family count mismatch for {repo_rel(path)}: "
+            f"cache={data.get('nFamilies')}/{len(families)} expected={expected}"
+        )
+    leakage_policy = str(data.get("leakagePolicy", ""))
+    if "inner-train" not in leakage_policy or "no affinity" not in leakage_policy:
+        raise SystemExit(f"DeepSeek profile cache has weak leakage policy: {repo_rel(path)}")
+    for fam, rec in families.items():
+        flags = rec.get("leakage_flags") or (rec.get("qc", {}) or {}).get("leakageFlags") or []
+        if flags:
+            raise SystemExit(f"DeepSeek profile cache family {fam} has leakage flags: {flags}")
 
 
 def args_selective_coverages_payload(payload: dict) -> list[float]:

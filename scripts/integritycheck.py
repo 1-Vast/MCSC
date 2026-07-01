@@ -103,9 +103,19 @@ def check_model_modules() -> None:
 
 
 def check_deepseek_boundary() -> None:
+    api_tokens = ("urllib" + ".request", "requests" + ".post", "chat/" + "completions")
+    offenders: list[str] = []
+    for path in (REPO / "scripts").glob("*.py"):
+        if path.name == "mechanismcache.py":
+            continue
+        src = path.read_text(encoding="utf-8").lower()
+        hits = [token for token in api_tokens if token in src]
+        if hits:
+            offenders.append(f"{path.name}:{','.join(hits)}")
+    assert not offenders, f"live API client tokens outside mechanismcache.py: {offenders}"
     train_src = read("scripts/selectiveaffinity.py").lower()
     cache_src = read("scripts/mechanismcache.py").lower()
-    forbidden = ("urllib.request", "chat/completions", "deepseek_api_key")
+    forbidden = ("urllib" + ".request", "chat/" + "completions", "deepseek" + "_api_key")
     leaked = [token for token in forbidden if token in train_src]
     assert not leaked, f"train/infer script contains live API tokens: {leaked}"
     for token in forbidden:

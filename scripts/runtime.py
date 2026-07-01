@@ -1,8 +1,8 @@
 """Runtime support for command scripts.
 
 This module owns repository paths, dataset loading, feature construction,
-public mechanism text, DeepSeek cache handling, leakage auditing, and split
-selection. Neural/model components stay in `model/`; scripts call this runtime.
+public mechanism text, leakage auditing, and split selection. Neural/model
+components stay in `model/`; scripts call this runtime.
 """
 from __future__ import annotations
 
@@ -14,7 +14,6 @@ import os
 import pickle
 import random
 import re
-import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -32,21 +31,6 @@ from model.encode import HashSmilesEncoder, MechanismTextEncoder, MorganEncoder,
 REPO = Path(__file__).resolve().parents[1]
 
 
-def env_file() -> Path:
-    value = os.getenv("DRUGTARGET_ENV_FILE", "").strip()
-    if value:
-        return Path(value).expanduser()
-    return REPO / ".env"
-
-
-def load_environment() -> Path:
-    from dotenv import load_dotenv
-
-    path = env_file()
-    load_dotenv(path, override=False)
-    return path
-
-
 def repo_relative(path: str | Path) -> str:
     value = Path(path)
     try:
@@ -60,7 +44,7 @@ class EncoderSettings:
     drug: str = "morgan"  # morgan | hash
     morgan_radius: int = 2
     morgan_bits: int = 1024
-    target: str = "kb"  # kb | deepseek | name
+    target: str = "kb"  # kb | name
     target_dim: int = 256
     normalize: bool = True
 
@@ -373,108 +357,6 @@ def build_knowledge_descriptors(
     print(f"[knowledge] targets with KB text: {sum(covered)}/{len(covered)} ({coverage:.1%})")
     return MechanismTextEncoder(target_dim, device).build(texts, center_mask=covered)
 
-# ---- deepseek.py ----
-PROMPT = """Describe the biological function of this human protein concisely.
-
-Include:
-- full protein name and family
-- primary biological function
-- key substrates, interactors, or pathways
-- disease associations if public and well established
-
-Use only public knowledge. Do not mention drugs, binding affinity, inhibition
-data, benchmark datasets, split membership, or model predictions.
-
-Protein: {name}
-Sequence prefix: {seq}
-"""
-
-
-def call_deepseek(prompt: str, max_retries: int = 3) -> str:
-    import requests
-
-    env_path = load_environment()
-    api_key = os.getenv("DEEPSEEK_API_KEY", "")
-    base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-    model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
-    if not api_key:
-        raise RuntimeError(
-            "DEEPSEEK_API_KEY is missing. Put it in repository `.env` or set "
-            f"DRUGTARGET_ENV_FILE. Checked: {repo_relative(env_path)}"
-        )
-
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.2,
-        "max_tokens": int(os.getenv("DEEPSEEK_MAX_TOKENS", "400")),
-    }
-    for attempt in range(max_retries):
-        try:
-            resp = requests.post(
-                f"{base_url}/v1/chat/completions",
-                json=payload,
-                headers=headers,
-                timeout=90,
-            )
-            if resp.status_code == 200:
-                return resp.json()["choices"][0]["message"]["content"]
-            if resp.status_code == 429:
-                time.sleep(5)
-                continue
-        except Exception as exc:
-            print(f"[deepseek] API error: {exc}")
-        if attempt < max_retries - 1:
-            time.sleep(2)
-    return ""
-
-
-def load_deepseek_texts(cache_path: Path) -> dict[str, str]:
-    if not cache_path.exists():
-        return {}
-    return json.loads(cache_path.read_text(encoding="utf-8"))
-
-
-def generate_deepseek_texts(
-    target_names: list[str],
-    target_seqs: list[str],
-    cache_path: Path,
-    limit: int | None = None,
-) -> dict[str, str]:
-    descriptions = load_deepseek_texts(cache_path)
-    if descriptions:
-        print(f"[deepseek] cached descriptions: {len(descriptions)}")
-
-    pairs = list(zip(target_names, target_seqs))
-    if limit is not None:
-        pairs = pairs[:limit]
-    missing = [(name, seq) for name, seq in pairs if name not in descriptions]
-    if missing:
-        print(f"[deepseek] querying {len(missing)} targets")
-        for i, (name, seq) in enumerate(missing, start=1):
-            desc = call_deepseek(PROMPT.format(name=name, seq=seq[:400]))
-            descriptions[name] = desc if desc else f"Protein {name}. No public functional annotation."
-            if i % 10 == 0:
-                print(f"[deepseek] {i}/{len(missing)}")
-            time.sleep(0.3)
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-        cache_path.write_text(json.dumps(descriptions, indent=2, ensure_ascii=False), encoding="utf-8")
-    return descriptions
-
-
-def build_deepseek_descriptors(
-    target_names: list[str],
-    target_seqs: list[str],
-    cache_path: Path,
-    dim: int = 256,
-    seed: int = 7,
-    device: str = "cpu",
-):
-    descriptions = generate_deepseek_texts(target_names, target_seqs, cache_path)
-    texts = [descriptions.get(name, f"Protein {name}.") for name in target_names]
-    return MechanismTextEncoder(dim, device).build(texts)
-
 # ---- pipeline.py ----
 
 
@@ -516,27 +398,6 @@ def feature_path(settings: RunSettings) -> Path:
 def model_path(settings: RunSettings, seed: int, split_name: str = "warm", model_type: str = "direct") -> Path:
     name = f"model-{settings.encoder.drug}-{settings.encoder.target}-{split_name}-{model_type}-seed{seed}.pt"
     return settings.repo_path(settings.record_dir) / name
-
-
-# Canonical (stable) DeepSeek cache name; older runs may have written an alternate name.
-DEEPSEEK_CACHE_NAME = "deepseek-target-descriptions.json"
-DEEPSEEK_CACHE_ALTERNATES = ("deepseekdescriptions30.json",)
-
-
-def deepseek_cache_path(settings: RunSettings) -> Path:
-    """Resolve the DeepSeek description cache. Prefer the canonical repository-relative
-    name; fall back to a known existing alternate so a valid cache is never silently
-    ignored (which would degrade `--target deepseek` to the name-only fallback). When no
-    cache exists yet, return the canonical path for first-time generation."""
-    cache_dir = settings.repo_path(settings.cache_dir)
-    canonical = cache_dir / DEEPSEEK_CACHE_NAME
-    if canonical.exists():
-        return canonical
-    for alt in DEEPSEEK_CACHE_ALTERNATES:
-        candidate = cache_dir / alt
-        if candidate.exists():
-            return candidate
-    return canonical
 
 
 def build_drug_features(data: dict, settings: RunSettings) -> torch.Tensor:
@@ -598,19 +459,6 @@ def target_texts(data: dict, settings: RunSettings) -> tuple[list[str], list[boo
 
         texts, covered = build_knowledge_texts(ids)
         return _audit_target_texts(settings, "kb", ids, texts, covered, exclude=False)
-    if settings.encoder.target == "deepseek":
-
-        cache_path = deepseek_cache_path(settings)
-        descriptions = load_deepseek_texts(cache_path)
-        if not descriptions:
-            raise SystemExit(
-                "--target deepseek requested but no cached descriptions found under "
-                f"{repo_relative(settings.repo_path(settings.cache_dir))}/ "
-                f"(expected {DEEPSEEK_CACHE_NAME}); run `python main.py api` first"
-            )
-        texts = [descriptions.get(name, f"Protein {name}.") for name in ids]
-        covered = [name in descriptions for name in ids]
-        return _audit_target_texts(settings, "deepseek", ids, texts, covered, exclude=True)
     if settings.encoder.target == "name":
         n = len(ids)
         summary = {"source": "name", "action": "none", "nTargets": n, "nOffenders": 0,
@@ -652,12 +500,6 @@ def build_features(settings: RunSettings) -> dict:
         "targetCoverage": f"{int(sum(target_covered))}/{len(target_covered)}",
         "targetAudit": target_audit,
     }
-    if settings.encoder.target == "deepseek":
-        # DeepSeek descriptions are model-generated external text: treat as UNSAFE until a
-        # human review or clean regeneration. Hard offenders are excluded above; record the
-        # source cache + safety state so no downstream claim treats them as vetted.
-        settings_meta["deepseekCache"] = repo_relative(deepseek_cache_path(settings))
-        settings_meta["targetTextSafety"] = "unsafe_until_reviewed"
     return {
         "drugFeat": drug_feat.cpu(),
         "targetFeat": target_feat.cpu(),
