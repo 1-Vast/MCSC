@@ -78,12 +78,9 @@ calibration and selective defer.
 main.py             only public dispatcher
 model/              PRISM architecture and neural components
 scripts/            protocol runners, audits, cache builder, preprocessing
-dataset/            datasets and regenerable feature/cache files
-outputs/prism/      checkpoints and runtime outputs
-doc/prism-*.json    compact result records
-doc/prism-*.md      compact reports
-externalresearch/   retired experiments and historical records only
+config/             lightweight default and calibration settings
+requirements.txt    Python package requirements
 ```
 
-Historical MCSC/M3C-DTI/DTA-GKN names are retired records and are not public
-entry points for the current repository.
+Generated datasets, caches, checkpoints, reports, and retired experiment
+records are intentionally ignored and not uploaded to the remote code branch.

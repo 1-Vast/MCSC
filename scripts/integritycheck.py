@@ -13,7 +13,7 @@ sys.path.insert(0, str(REPO))
 from model import PrismMemoryRefiner, PrismSelectiveRefiner  # noqa: E402
 
 
-MAINLINE_DIRS = {"config", "dataset", "doc", "externalresearch", "model", "outputs", "scripts"}
+MAINLINE_DIRS = {"config", "model", "scripts"}
 PUBLIC_COMMANDS = {"prism", "cache", "audit", "preprocess", "train", "infer", "check"}
 RETIRED_COMMANDS = {
     "m" + "csc",
@@ -52,8 +52,7 @@ def check_root_layout() -> None:
     root_dirs = {p.name for p in REPO.iterdir() if p.is_dir()}
     missing = sorted(MAINLINE_DIRS - root_dirs)
     assert not missing, f"mainline directories missing: {missing}"
-    assert (REPO / "externalresearch" / "README.md").exists(), "external research boundary README missing"
-    pass_("root layout keeps PRISM code, data, outputs, docs, and external records separated")
+    pass_("root layout keeps PRISM code and configuration separated")
 
 
 def check_scripts_layout() -> None:

@@ -33,7 +33,7 @@
       "selectedAlphaCalibrationR2": 0.1869,
       "priorOnlyCalibrationR2": 0.1785,
       "nCalibrationSeeds": 8,
-      "source": "externalresearch/experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+      "source": "frozen inner-cold calibration record"
     },
     {
       "dataset": "DAVIS",
@@ -65,7 +65,7 @@
       "selectedAlphaCalibrationR2": 0.4461,
       "priorOnlyCalibrationR2": 0.4021,
       "nCalibrationSeeds": 8,
-      "source": "externalresearch/experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+      "source": "frozen inner-cold calibration record"
     },
     {
       "dataset": "KIBA",
@@ -97,7 +97,7 @@
       "selectedAlphaCalibrationR2": 0.408,
       "priorOnlyCalibrationR2": 0.3747,
       "nCalibrationSeeds": 8,
-      "source": "externalresearch/experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+      "source": "frozen inner-cold calibration record"
     },
     {
       "dataset": "KIBA",
@@ -129,7 +129,7 @@
       "selectedAlphaCalibrationR2": 0.4124,
       "priorOnlyCalibrationR2": 0.3838,
       "nCalibrationSeeds": 8,
-      "source": "externalresearch/experiments/analysis/mcsc-mechanism-and-refiner-bottleneck-20260626/manifest.json"
+      "source": "frozen inner-cold calibration record"
     }
   ]
 }

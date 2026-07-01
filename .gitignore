@@ -30,13 +30,9 @@ dataset/kiba/Y.truncated.bak
 # Local archive material
 outputs/archive/*
 idea/research-runs/
-externalresearch/experiments/
-externalresearch/modeltools/
-externalresearch/runs/
-externalresearch/scripts/
-externalresearch/thirdparty/
-externalresearch/tmp/
-!externalresearch/README.md
+doc/
+experiments/
+externalresearch/
 
 # Secrets
 .env
@@ -48,12 +44,5 @@ file/
 agent.md
 remote_tmp_*.json
 
-# --- Canonical evidence policy -------------------------------------------------
-# TRACKED (claim-defining, small, recoverable via git):
-#   config/*.json   -> frozen model inputs incl. prior-calibration.json (validation-derived tau)
-#   doc/*.md, doc/*.json -> verification gate, frozen result summaries, split-equivalence,
-#                           cross-dataset + re-freeze reports, evidence-schema2.json
-# IGNORED (heavy / regenerable, reproducible from checkpoints + canonical config):
-#   outputs/ (per-cell records, checkpoints), dataset/cache (features, morgan cache), *.pt
-# Rationale: anything that DEFINES a claim or the frozen operating point lives in config/ or doc/
-# (tracked); anything regenerable from those + checkpoints stays ignored. Do not commit *.pt.
+# Remote code policy: keep generated results, experiment ledgers, external
+# research records, datasets, checkpoints, and local reports out of git.
