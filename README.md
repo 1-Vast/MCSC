@@ -13,18 +13,25 @@ inference.
 
 ```text
 prior = train-only interaction memory
-pair = neural drug-target representation
+pair = neural drug-target representation from drug/target/text/profile features
+trust_context = [memory diagnostics, domain/QC distance]  (low-dimensional, train-only)
 domain = train-only GKN target-domain prototypes
 qc = offline DeepSeek mechanism quality audit
-final = prior + gamma(pair, memory, domain, qc) * residual(pair)
+final = prior + gamma(pair, trust_context, qc) * residual(pair)
 ```
+
+The mainline is deliberately two-branch: the cross-modal representation branch
+predicts the residual, while memory/domain/QC signals reach the
+`ResidualTrustGate` and validation-time calibration. Earlier shared-token
+context injection was tested and rejected for promotion, then removed from the
+public training path.
 
 Core code lives under `model/`:
 
-- `PrismMemoryRefiner`: memory-calibrated neural affinity refiner.
-- `PrismSelectiveRefiner`: mechanism text adapter, GKN prototype distances, and
+- `MemoryResidualRefiner`: memory-calibrated neural affinity refiner.
+- `SelectiveAffinityRefiner`: mechanism text adapter, GKN prototype distances, and
   domain-aware defer gate.
-- `GraphKnowledgeNetwork`, `DomainDeferGate`, and prompt-profile adapters are
+- `TargetDomainGraphEncoder`, `ResidualTrustGate`, and mechanism-profile fusion are
   model components, not public scripts.
 
 Tooling lives under `scripts/` and is called through `main.py`.

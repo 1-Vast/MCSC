@@ -1,4 +1,4 @@
-"""Multimodal descriptor adapters for PRISM."""
+"""Descriptor-to-token adapters for PRISM."""
 from __future__ import annotations
 
 from math import ceil
@@ -19,8 +19,8 @@ def _split_sizes(width: int, bins: int) -> list[int]:
     return sizes
 
 
-class ChunkScaleProjector(nn.Module):
-    """Project one descriptor split into several local tokens."""
+class DescriptorChunkProjector(nn.Module):
+    """Project one descriptor split into local tokens."""
 
     def __init__(self, input_dim: int, bins: int, d_model: int, dropout: float) -> None:
         super().__init__()
@@ -40,8 +40,8 @@ class ChunkScaleProjector(nn.Module):
         return torch.stack([project(chunk) for project, chunk in zip(self.parts, chunks)], dim=1)
 
 
-class MultiScaleModalityAdapter(nn.Module):
-    """Map a frozen descriptor into global and local modality tokens."""
+class MultiScaleDescriptorAdapter(nn.Module):
+    """Map a frozen descriptor into global and local tokens."""
 
     def __init__(
         self,
@@ -52,7 +52,7 @@ class MultiScaleModalityAdapter(nn.Module):
     ) -> None:
         super().__init__()
         self.projectors = nn.ModuleList([
-            ChunkScaleProjector(input_dim, bins, d_model, dropout)
+            DescriptorChunkProjector(input_dim, bins, d_model, dropout)
             for bins in scales
         ])
         self.refine = nn.Sequential(

@@ -10,7 +10,7 @@ import torch
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
-from model import PrismMemoryRefiner, PrismSelectiveRefiner  # noqa: E402
+from model import MemoryResidualRefiner, SelectiveAffinityRefiner  # noqa: E402
 
 
 MAINLINE_DIRS = {"config", "model", "scripts"}
@@ -78,15 +78,15 @@ def check_dispatcher() -> None:
 
 def check_model_modules() -> None:
     required = {
-        "model/adapters.py",
-        "model/attention.py",
-        "model/defer.py",
-        "model/enhanced.py",
-        "model/graph.py",
+        "model/domain.py",
+        "model/fusion.py",
+        "model/mechanismllm.py",
         "model/memory.py",
-        "model/promptfusion.py",
-        "model/refiners.py",
+        "model/profiles.py",
+        "model/residual.py",
+        "model/selective.py",
         "model/text.py",
+        "model/tokens.py",
     }
     missing = sorted(path for path in required if not (REPO / path).exists())
     assert not missing, f"missing model modules: {missing}"
@@ -96,27 +96,34 @@ def check_model_modules() -> None:
     )
     assert not undernamed, f"model filenames should avoid underscores except __init__.py: {undernamed}"
     public_api = read("model/__init__.py")
-    assert "PrismMemoryRefiner" in public_api and "PrismSelectiveRefiner" in public_api
+    assert "MemoryResidualRefiner" in public_api and "SelectiveAffinityRefiner" in public_api
     assert "M3C" not in public_api and "DTA" not in public_api
-    pass_("model exposes PRISM memory and selective refiners with clean public names")
+    pass_("model exposes function-named PRISM refiners")
 
 
 def check_deepseek_boundary() -> None:
     api_tokens = ("urllib" + ".request", "requests" + ".post", "chat/" + "completions")
     offenders: list[str] = []
-    for path in (REPO / "scripts").glob("*.py"):
-        if path.name == "mechanismcache.py":
-            continue
-        src = path.read_text(encoding="utf-8").lower()
-        hits = [token for token in api_tokens if token in src]
-        if hits:
-            offenders.append(f"{path.name}:{','.join(hits)}")
+    # Scan both scripts/ and model/: the staged-generation orchestration/prompt/QC logic lives in
+    # model/mechanismllm.py (importable from the train/infer path), so it must never gain a live
+    # network client. Only scripts/mechanismcache.py may contain one.
+    for directory in ("scripts", "model"):
+        for path in (REPO / directory).glob("*.py"):
+            if path.name == "mechanismcache.py":
+                continue
+            src = path.read_text(encoding="utf-8").lower()
+            hits = [token for token in api_tokens if token in src]
+            if hits:
+                offenders.append(f"{directory}/{path.name}:{','.join(hits)}")
     assert not offenders, f"live API client tokens outside mechanismcache.py: {offenders}"
     train_src = read("scripts/selectiveaffinity.py").lower()
+    mechanismllm_src = read("model/mechanismllm.py").lower()
     cache_src = read("scripts/mechanismcache.py").lower()
     forbidden = ("urllib" + ".request", "chat/" + "completions", "deepseek" + "_api_key")
     leaked = [token for token in forbidden if token in train_src]
     assert not leaked, f"train/infer script contains live API tokens: {leaked}"
+    leaked_model = [token for token in forbidden if token in mechanismllm_src]
+    assert not leaked_model, f"model/mechanismllm.py contains live API tokens: {leaked_model}"
     for token in forbidden:
         assert token in cache_src, f"offline cache script missing expected DeepSeek client token: {token}"
     pass_("DeepSeek is isolated to offline mechanism cache construction")
@@ -125,7 +132,7 @@ def check_deepseek_boundary() -> None:
 def check_cuda_forward() -> None:
     assert torch.cuda.is_available(), "CUDA is required for PRISM integrity checks"
     device = torch.device("cuda")
-    base = PrismMemoryRefiner(32, 24, d_model=64, n_heads=4, n_layers=1, ff_dim=128, mem_dim=5).to(device)
+    base = MemoryResidualRefiner(32, 24, d_model=64, n_heads=4, n_layers=1, ff_dim=128, mem_dim=5).to(device)
     base_out = base(
         torch.randn(8, 32, device=device),
         torch.randn(8, 24, device=device),
@@ -133,7 +140,7 @@ def check_cuda_forward() -> None:
         torch.randn(8, 5, device=device),
     )
     assert base_out.shape == (8,), f"unexpected base shape: {tuple(base_out.shape)}"
-    model = PrismSelectiveRefiner(
+    model = SelectiveAffinityRefiner(
         32, 24, text_dim=16, domain_dim=4,
         d_model=64, n_heads=4, n_layers=1, ff_dim=128, mem_dim=5,
     ).to(device)
@@ -149,6 +156,34 @@ def check_cuda_forward() -> None:
     pass_("PRISM CUDA forward path works for memory and selective refiners")
 
 
+def check_selective_branch_separation() -> None:
+    """Memory/domain context must affect trust gating, not the cross-modal residual branch."""
+    device = torch.device("cuda")
+    drug = torch.randn(6, 20, device=device)
+    target = torch.randn(6, 18, device=device)
+    mem = torch.randn(6, 5, device=device)
+    domain = torch.randn(6, 4, device=device)
+
+    model = SelectiveAffinityRefiner(
+        20, 18, text_dim=0, domain_dim=4,
+        d_model=32, n_heads=4, n_layers=1, ff_dim=64, mem_dim=5,
+    ).to(device)
+    model.eval()  # disable dropout so branch comparisons are not confounded by mask randomness
+    with torch.no_grad():
+        pair_with_context = model.pair_representation(drug, target, None, mem, domain)
+        pair_without_context = model.pair_representation(drug, target, None, None, None)
+        assert torch.allclose(pair_with_context, pair_without_context, atol=1e-5), (
+            "memory/domain context must not enter the cross-modal residual representation"
+        )
+        _, gamma_with_context = model.residual_gate(drug, target, mem, None, domain)
+        _, gamma_without_context = model.residual_gate(drug, target, None, None, None)
+        assert not torch.allclose(gamma_with_context, gamma_without_context), (
+            "memory/domain context must still affect the ResidualTrustGate"
+        )
+    assert not hasattr(model.base.space, "context_proj"), "mainline shared token must not allocate context injection"
+    pass_("PRISM branch separation holds: residual representation is clean, trust gate uses context")
+
+
 def main() -> None:
     check_root_layout()
     check_scripts_layout()
@@ -156,6 +191,7 @@ def main() -> None:
     check_model_modules()
     check_deepseek_boundary()
     check_cuda_forward()
+    check_selective_branch_separation()
     pass_("PRISM integrity checks completed")
 
 

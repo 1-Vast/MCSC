@@ -1,15 +1,14 @@
-"""Memory-calibrated Transformer refiners for PRISM."""
+"""Memory-calibrated Transformer residual refiner for PRISM."""
 from __future__ import annotations
 
 import torch
 import torch.nn as nn
 
-from model.adapters import MultiScaleModalityAdapter
-from model.attention import GatedCrossAttentionBlock
-from model.space import SharedSpaceInitializer
+from model.fusion import GatedCrossModalAttentionBlock, SharedInteractionSpace
+from model.tokens import MultiScaleDescriptorAdapter
 
 
-def _bounded_residual(raw: torch.Tensor, residual_scale: float | None) -> torch.Tensor:
+def bounded_residual(raw: torch.Tensor, residual_scale: float | None) -> torch.Tensor:
     if residual_scale is None or residual_scale <= 0:
         return raw
     return float(residual_scale) * torch.tanh(raw / float(residual_scale))
@@ -36,8 +35,8 @@ class ResidualPath(nn.Module):
         return self.out_norm(base + self.body(base))
 
 
-class PrismMemoryRefiner(nn.Module):
-    """Pure PRISM memory-calibrated cross-attention residual refiner."""
+class MemoryResidualRefiner(nn.Module):
+    """Memory-calibrated cross-attention residual refiner."""
 
     def __init__(
         self,
@@ -54,15 +53,15 @@ class PrismMemoryRefiner(nn.Module):
     ) -> None:
         super().__init__()
         if text_dim:
-            raise ValueError("pure PrismMemoryRefiner does not accept text/LLM features")
+            raise ValueError("MemoryResidualRefiner does not accept text/LLM features")
         self.residual_scale = residual_scale
         self.mem_dim = int(mem_dim)
-        self.drug_adapter = MultiScaleModalityAdapter(drug_dim, d_model, dropout, scales=(1, 4))
-        self.target_adapter = MultiScaleModalityAdapter(target_dim, d_model, dropout, scales=(1, 4))
+        self.drug_adapter = MultiScaleDescriptorAdapter(drug_dim, d_model, dropout, scales=(1, 4))
+        self.target_adapter = MultiScaleDescriptorAdapter(target_dim, d_model, dropout, scales=(1, 4))
         self.type_embed = nn.Parameter(torch.zeros(3, d_model))
-        self.space = SharedSpaceInitializer(d_model, dropout)
+        self.space = SharedInteractionSpace(d_model, dropout)
         self.cross_modal_layers = nn.ModuleList([
-            GatedCrossAttentionBlock(d_model, n_heads, ff_dim, dropout)
+            GatedCrossModalAttentionBlock(d_model, n_heads, ff_dim, dropout)
             for _ in range(n_layers)
         ])
         feature_dim = d_model * 5
@@ -110,7 +109,11 @@ class PrismMemoryRefiner(nn.Module):
             drug_tokens, target_tokens, shared_tokens = block(drug_tokens, target_tokens, shared_tokens)
         return drug_tokens.mean(dim=1), target_tokens.mean(dim=1), shared_tokens.mean(dim=1)
 
-    def _path(self, drug_feat: torch.Tensor, target_feat: torch.Tensor) -> torch.Tensor:
+    def _path(
+        self,
+        drug_feat: torch.Tensor,
+        target_feat: torch.Tensor,
+    ) -> torch.Tensor:
         drug_pool, target_pool, shared_pool = self.encode(drug_feat, target_feat)
         fused = torch.cat([
             drug_pool,
@@ -128,7 +131,11 @@ class PrismMemoryRefiner(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         return self.encode(drug_feat, target_feat)
 
-    def pair_representation(self, drug_feat: torch.Tensor, target_feat: torch.Tensor) -> torch.Tensor:
+    def pair_representation(
+        self,
+        drug_feat: torch.Tensor,
+        target_feat: torch.Tensor,
+    ) -> torch.Tensor:
         return self._path(drug_feat, target_feat)
 
     def residual_gate(
@@ -140,7 +147,7 @@ class PrismMemoryRefiner(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor]:
         _ = text_feat
         path = self._path(drug_feat, target_feat)
-        residual = _bounded_residual(self.residual_head(path).squeeze(-1), self.residual_scale)
+        residual = bounded_residual(self.residual_head(path).squeeze(-1), self.residual_scale)
         mem = self._mem_or_zeros(path, mem_feat)
         gate_in = path if mem is None else torch.cat([path, mem], dim=-1)
         gate = torch.sigmoid(self.gate_head(gate_in)).squeeze(-1)

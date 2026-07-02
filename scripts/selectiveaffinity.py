@@ -20,8 +20,8 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
 from model.encode import MechanismTextEncoder, tokenize
-from model.enhanced import PrismSelectiveRefiner
-from model.graph import GraphKnowledgeNetwork, dense_normalized_adjacency
+from model.domain import TargetDomainGraphEncoder, dense_normalized_adjacency
+from model.selective import SelectiveAffinityRefiner
 from scripts.affinitydata import load_affinity_bundle, make_split, parse_cells
 from scripts.affinityops import (
     MEM_DIM,
@@ -364,7 +364,7 @@ def train_gkn_prototypes(
         higcn_tiers=int(getattr(args, "higcn_tiers", 2)),
     )
     adj = dense_normalized_adjacency(node_feat.shape[0], edges, device)
-    model = GraphKnowledgeNetwork(args.text_dim, args.gkn_hidden, args.domain_dim, dropout=args.dropout).to(device)
+    model = TargetDomainGraphEncoder(args.text_dim, args.gkn_hidden, args.domain_dim, dropout=args.dropout).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=args.gkn_lr, weight_decay=args.weight_decay)
     target_adj = (adj > 0).float()
     best_state = None
@@ -458,6 +458,9 @@ def checkpoint_path(dataset: str, split: str, seed: int, args: argparse.Namespac
     drug_mode = getattr(args, "drug_encoder", "morgan")
     if drug_mode != "morgan":
         extra += f"_{drug_mode.replace('-', '')}"
+    # Fixed architecture tag retained so current mainline checkpoints remain addressable after
+    # removing the rejected early-context branch from the public training path.
+    extra += "_ec0"
     pmode = getattr(args, "prompt_profile_mode", "off")
     if bool(getattr(args, "family_calibration", False)):
         extra += "_fcal"
@@ -564,10 +567,10 @@ def train_gkn_model(
     device: torch.device,
     prompt_cats: torch.Tensor | None = None,
     prompt_cov: torch.Tensor | None = None,
-) -> tuple[PrismSelectiveRefiner, dict]:
+) -> tuple[SelectiveAffinityRefiner, dict]:
     seed_everything(args.seed)
     prompt_dim = int(prompt_cats.shape[-1]) if prompt_cats is not None else 0
-    model = PrismSelectiveRefiner(
+    model = SelectiveAffinityRefiner(
         drug_feat.shape[1],
         target_feat.shape[1],
         text_feat.shape[1],
@@ -707,7 +710,7 @@ def train_gkn_model(
 
 @torch.no_grad()
 def predict_gkn(
-    model: PrismSelectiveRefiner,
+    model: SelectiveAffinityRefiner,
     drug_feat: torch.Tensor,
     target_feat: torch.Tensor,
     text_feat: torch.Tensor,
@@ -1006,7 +1009,7 @@ def run_train_one(dataset: str, split: str, seed: int, args: argparse.Namespace,
         "split": split,
         "seed": int(seed),
         "checkpoint": repo_rel(out),
-        "modelType": "PrismSelectiveRefiner",
+        "modelType": "SelectiveAffinityRefiner",
         "architectureName": "PRISM",
         "physicalLine": "outputs/prism",
         "drugDim": int(drug_feat.shape[1]),
@@ -1027,6 +1030,7 @@ def run_train_one(dataset: str, split: str, seed: int, args: argparse.Namespace,
         "selective": selective_meta,
         "selectiveCoverages": list(getattr(args, "selective_coverages", [1.0, 0.95, 0.90, 0.80])),
         "hierarchicalGkn": bool(getattr(args, "hierarchical_gkn", False)),
+        "earlyContext": False,
         "mechanismAlignWeight": float(getattr(args, "mechanism_align_weight", 0.0)),
         "pairAffinityWeight": float(getattr(args, "pair_affinity_weight", 0.0)),
         "promptMeta": (pack["profile"]["meta"] if pack.get("profile") else None),
@@ -1099,14 +1103,14 @@ def run_train_one(dataset: str, split: str, seed: int, args: argparse.Namespace,
     return metadata
 
 
-def load_checkpoint(dataset: str, split: str, seed: int, args: argparse.Namespace, device: torch.device) -> tuple[dict, PrismSelectiveRefiner]:
+def load_checkpoint(dataset: str, split: str, seed: int, args: argparse.Namespace, device: torch.device) -> tuple[dict, SelectiveAffinityRefiner]:
     path = resolve_checkpoint_path(dataset, split, seed, args)
     if not path.exists():
         raise SystemExit(f"missing checkpoint: {repo_rel(path)}; run train first")
     payload = torch.load(path, map_location="cpu", weights_only=False)
     validate_deepseek_cache_for_payload(payload)
     prompt_dim = int(payload["promptProfileTensor"].shape[-1]) if "promptProfileTensor" in payload else 0
-    model = PrismSelectiveRefiner(
+    model = SelectiveAffinityRefiner(
         int(payload["drugDim"]),
         int(payload["targetDim"]),
         int(payload["textDim"]),
@@ -1529,7 +1533,7 @@ def build_conformal_defer_meta(
 
 def calibrate_harmfirst_at_infer(
     payload: dict,
-    model: PrismSelectiveRefiner,
+    model: SelectiveAffinityRefiner,
     drug_feat: torch.Tensor,
     target_feat: torch.Tensor,
     text_feat: torch.Tensor,
@@ -1586,7 +1590,7 @@ def calibrate_harmfirst_at_infer(
 
 def calibrate_selective_at_infer(
     payload: dict,
-    model: PrismSelectiveRefiner,
+    model: SelectiveAffinityRefiner,
     drug_feat: torch.Tensor,
     target_feat: torch.Tensor,
     text_feat: torch.Tensor,

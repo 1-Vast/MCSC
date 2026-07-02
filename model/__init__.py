@@ -1,18 +1,22 @@
 """Core PRISM model components."""
-from model.adapters import MultiScaleModalityAdapter
-from model.attention import GatedCrossAttentionBlock
-from model.enhanced import PrismSelectiveRefiner
+from model.domain import ResidualTrustGate, TargetDomainGraphEncoder
+from model.fusion import GatedCrossModalAttentionBlock, SharedInteractionSpace
 from model.memory import InteractionMemory
 from model.metrics import compute_metrics
-from model.refiners import PrismMemoryRefiner
-from model.space import SharedSpaceInitializer
+from model.residual import MemoryResidualRefiner
+from model.selective import SelectiveAffinityRefiner
+from model.text import MechanismTextProjector
+from model.tokens import MultiScaleDescriptorAdapter
 
 __all__ = [
-    "GatedCrossAttentionBlock",
+    "GatedCrossModalAttentionBlock",
     "InteractionMemory",
-    "MultiScaleModalityAdapter",
-    "PrismMemoryRefiner",
-    "PrismSelectiveRefiner",
-    "SharedSpaceInitializer",
+    "MechanismTextProjector",
+    "MemoryResidualRefiner",
+    "MultiScaleDescriptorAdapter",
+    "ResidualTrustGate",
+    "SelectiveAffinityRefiner",
+    "SharedInteractionSpace",
+    "TargetDomainGraphEncoder",
     "compute_metrics",
 ]

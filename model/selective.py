@@ -1,17 +1,17 @@
-"""PRISM selective refiner with GKN prototypes and DeepSeek-QC signals."""
+"""Selective affinity refiner with domain prototypes and reliability signals."""
 from __future__ import annotations
 
 import torch
 import torch.nn as nn
 
-from model.defer import DomainDeferGate
-from model.promptfusion import PromptProfileAdapter
-from model.refiners import PrismMemoryRefiner, _bounded_residual
-from model.text import MechanismTextAdapter
+from model.domain import ResidualTrustGate
+from model.profiles import MechanismProfileFusion
+from model.residual import MemoryResidualRefiner, bounded_residual
+from model.text import MechanismTextProjector
 
 
-class PrismSelectiveRefiner(nn.Module):
-    """PRISM extension with mechanism text, GKN prototypes, and selective defer."""
+class SelectiveAffinityRefiner(nn.Module):
+    """Residual affinity refiner gated by memory, text, and target-domain signals."""
 
     def __init__(
         self,
@@ -33,11 +33,16 @@ class PrismSelectiveRefiner(nn.Module):
         super().__init__()
         self.residual_scale = residual_scale
         self.prompt_adapter = (
-            PromptProfileAdapter(prompt_profile_dim, d_model, prompt_fusion, n_heads, dropout)
+            MechanismProfileFusion(prompt_profile_dim, d_model, prompt_fusion, n_heads, dropout)
             if prompt_profile_dim and prompt_fusion != "off" else None
         )
         self.align_proj = nn.Linear(prompt_profile_dim, d_model) if prompt_profile_dim else None
-        self.base = PrismMemoryRefiner(
+        self.mem_dim = int(mem_dim)
+        self.domain_dim = int(domain_dim)
+        # Best mainline: keep representation and trust separate. The representation branch
+        # predicts a residual from drug/target/text/profile features; memory/domain/QC context
+        # reaches the ResidualTrustGate and validation-time calibration, not the shared token.
+        self.base = MemoryResidualRefiner(
             drug_dim,
             target_dim,
             d_model=d_model,
@@ -49,7 +54,7 @@ class PrismSelectiveRefiner(nn.Module):
             mem_dim=0,
             text_dim=0,
         )
-        self.text_adapter = MechanismTextAdapter(text_dim, d_model, dropout) if text_dim else None
+        self.text_adapter = MechanismTextProjector(text_dim, d_model, dropout) if text_dim else None
         self.text_merge = nn.Sequential(
             nn.LayerNorm(d_model * 2),
             nn.Linear(d_model * 2, d_model),
@@ -63,10 +68,6 @@ class PrismSelectiveRefiner(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(max(64, d_model // 2), 1),
         )
-        # Pair-affinity auxiliary head: a small head that regresses directly to y from the
-        # cross-attn pair representation, used only as a training-time loss to force the
-        # backbone to encode pair-affinity signal in the fused representation. NOT used at
-        # inference: the prediction pathway remains prior + gamma * residual.
         self.pair_affinity_head = nn.Sequential(
             nn.LayerNorm(d_model),
             nn.Linear(d_model, max(64, d_model // 2)),
@@ -74,7 +75,7 @@ class PrismSelectiveRefiner(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(max(64, d_model // 2), 1),
         )
-        self.defer_gate = DomainDeferGate(
+        self.defer_gate = ResidualTrustGate(
             pair_dim=d_model,
             mem_dim=mem_dim,
             domain_dim=domain_dim,
@@ -91,7 +92,10 @@ class PrismSelectiveRefiner(nn.Module):
         drug_feat: torch.Tensor,
         target_feat: torch.Tensor,
         text_feat: torch.Tensor | None = None,
+        mem_feat: torch.Tensor | None = None,
+        domain_dist: torch.Tensor | None = None,
     ) -> torch.Tensor:
+        _ = mem_feat, domain_dist
         pair = self.base.pair_representation(drug_feat, target_feat)
         if self.text_adapter is None or text_feat is None:
             return pair
@@ -109,17 +113,17 @@ class PrismSelectiveRefiner(nn.Module):
         prompt_coverage: torch.Tensor | None = None,
         return_pair: bool = False,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        pair = self.pair_representation(drug_feat, target_feat, text_feat)
+        pair = self.pair_representation(drug_feat, target_feat, text_feat, mem_feat, domain_dist)
         if self.prompt_adapter is not None and prompt_categories is not None:
             pair = pair + self.prompt_adapter(pair, prompt_categories, prompt_coverage)
-        residual = _bounded_residual(self.residual_head(pair).squeeze(-1), self.residual_scale)
+        residual = bounded_residual(self.residual_head(pair).squeeze(-1), self.residual_scale)
         gamma = self.defer_gate(pair, mem_feat, domain_dist)
         if return_pair:
             return residual, gamma, pair
         return residual, gamma
 
     def pair_affinity(self, pair: torch.Tensor) -> torch.Tensor:
-        """Auxiliary affinity prediction from the pair representation (train-time only)."""
+        """Auxiliary affinity prediction from the pair representation."""
         return self.pair_affinity_head(pair).squeeze(-1)
 
     def forward(
